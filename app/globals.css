@@ -686,3 +686,30 @@ td { padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: t
 .landing .parts li { background:#fff; border:1px solid var(--line); border-radius:16px; padding:22px; font:700 1.1rem var(--display); color:var(--navy); display:flex; align-items:center; gap:14px; }
 .landing .parts b { font-size:.8rem; color:var(--orange-dark); background:var(--soft); border-radius:10px; padding:6px 9px; }
 @media(max-width:860px) { .landing .parts { grid-template-columns:1fr; } }
+
+/* Mejorar mi prompt */
+.prompt-box { white-space: pre-wrap; background: var(--cream); border: 1px dashed var(--orange); border-radius: var(--r); padding: 16px; font-size: .95rem; }
+.art-prompt, .art-landing { background: #fff4ea; }
+
+/* Página de producto (pública) */
+.product-page { max-width: 680px; }
+.pp-hero { text-align: center; margin-bottom: 24px; }
+.pp-main { width: 100%; max-height: 520px; object-fit: contain; border-radius: 20px; background: #fff; margin-bottom: 18px; box-shadow: 0 10px 30px rgba(23,50,77,.08); }
+.pp-hero h1 { font-size: clamp(1.9rem, 6vw, 2.6rem); }
+.pp-sub { font-size: 1.1rem; color: var(--muted); }
+.pp-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.pp-wa { border-color: #1f7a3d; color: #1f7a3d; }
+.pp-gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin: 0 0 24px; }
+.pp-gallery img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 14px; background: #fff; }
+.pp-benefits, .pp-faqs { background: #fff; border: 1px solid var(--line); border-radius: 20px; padding: 24px; margin-bottom: 24px; }
+.pp-benefits h2, .pp-faqs h2 { margin-top: 0; }
+.pp-benefits article { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.pp-benefits article:last-child { border: 0; }
+.pp-benefits article > span { color: var(--orange); font-size: 1.3rem; line-height: 1.2; }
+.pp-benefits h3 { margin: 0 0 4px; }
+.pp-benefits p { margin: 0; color: var(--muted); }
+.pp-faqs details { border-bottom: 1px solid var(--line); padding: 12px 0; }
+.pp-faqs details:last-child { border: 0; }
+.pp-faqs summary { font-weight: 700; color: var(--navy); cursor: pointer; }
+.pp-faqs details p { margin: 8px 0 0; color: var(--muted); }
+.pp-wa-float { position: fixed; right: 18px; bottom: 18px; width: 58px; height: 58px; border-radius: 50%; background: #25d366; display: grid; place-items: center; font-size: 1.6rem; text-decoration: none; box-shadow: 0 8px 22px rgba(0,0,0,.2); z-index: 30; }

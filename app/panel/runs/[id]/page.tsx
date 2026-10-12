@@ -4,7 +4,8 @@ import { requireUser } from '@/lib/auth'
 import { q } from '@/lib/db'
 import { coins } from '@/lib/credits'
 import { LABEL } from '@/lib/scoring'
-import { money, TOOLS } from '@/lib/meta'
+import { money, PROMPT_TARGETS, TOOLS } from '@/lib/meta'
+import { OrderLink } from '@/lib/order-link'
 import { CopyText } from '@/lib/copy-text'
 import { RunProgress } from '@/lib/run-progress'
 import { TranscriptResult } from '@/lib/transcript-result'
@@ -92,9 +93,10 @@ const Items = ({ rows, a, b, label }: { rows: any[]; a: string; b: string; label
   </div>
 )
 
-export default async function RunPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function RunPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ saved?: string }> }) {
   const user = await requireUser()
   const { id } = await params
+  const { saved } = await searchParams
   if (!/^\d+$/.test(id)) notFound()
   const [run] = await q('select * from runs where id=$1 and user_id=$2', [id, user.id])
   if (!run) notFound()
@@ -102,6 +104,7 @@ export default async function RunPage({ params }: { params: Promise<{ id: string
   const r = run.result
   const active = run.status === 'QUEUED' || run.status === 'RUNNING'
   const cur = run.input.currency || 'PEN'
+  const [page] = run.tool === 'landing' && r?.token ? await q('select page,product_name,active from order_links where token=$1 and user_id=$2', [r.token, user.id]) : []
 
   return (
     <>
@@ -139,6 +142,26 @@ export default async function RunPage({ params }: { params: Promise<{ id: string
       {run.status === 'COMPLETED' && run.tool === 'hooks' && (
         <><p className="muted">Producto que vimos: {r.product}</p><Title tip="Frases de apertura agrupadas por ángulo. Copia la que más te guste y úsala como primera línea o primeros segundos de tu video.">Tus hooks por ángulo</Title><Hooks hooks={r.hooks} /><p className="tag">{r.disclaimer}</p></>
       )}
+      {run.status === 'COMPLETED' && run.tool === 'prompt' && (() => { const [label, where, href, toolName] = PROMPT_TARGETS[r.target]; return <>
+        <section className="card"><span className="eyebrow">LISTO PARA COPIAR</span><Title tip={`Pega este prompt en ${where}. Si ves [completa: dato], reemplázalo con tu información real.`}>Tu prompt para {label.toLowerCase()}</Title><p className="prompt-box">{r.prompt}</p><CopyText text={r.prompt} /></section>
+        <div className="row"><section className="card"><Title tip="Lo que agregamos a tu idea para que la IA entienda exactamente qué quieres.">✨ Qué mejoramos</Title><ul>{r.improvements.map((x: string) => <li key={x}>{x}</li>)}</ul></section>
+        <section className="card"><Title tip="Pasos para usar el prompt en la herramienta de destino.">🧭 Cómo usarlo</Title><ol>{r.how_to.map((x: string) => <li key={x}>{x}</li>)}</ol></section></div>
+        {r.missing.length > 0 && <section className="card"><Title tip="Si agregas estos datos, el resultado será más fiel a tu producto.">📝 Datos que conviene completar</Title><ul>{r.missing.map((x: string) => <li key={x}>{x}</li>)}</ul></section>}
+        <div className="note"><b>¿Prefieres que lo hagamos por ti?</b><p className="tag">Con {toolName} lo creas directo en Tendy, sin copiar ni pegar.</p><a className="btn" href={href}>Ir a {toolName} ↗</a> <a className="btn ghost" href="/panel/tools/prompt">Mejorar otro prompt</a></div>
+        <p className="note">{r.disclaimer}</p></> })()}
+      {run.status === 'COMPLETED' && run.tool === 'landing' && page && <>
+        <section className="card"><span className="eyebrow">{page.active ? 'TU PÁGINA ESTÁ PUBLICADA' : 'PÁGINA DESACTIVADA'}</span><Title tip="Comparte este enlace en tu bio, estados de WhatsApp o anuncios. Los pedidos que lleguen aparecen en Mi enlace de pedidos.">{page.product_name}</Title>
+          {page.active && <><OrderLink token={r.token} /><a className="btn ghost" href="/panel/orders">Ver pedidos recibidos</a></>}</section>
+        <form className="form" method="post" action="/api/order-links"><input type="hidden" name="token" value={r.token} /><input type="hidden" name="action" value="page" /><input type="hidden" name="run" value={run.id} />
+          <div className="form-heading"><span className="form-step">✎</span><div><h2>Edita los textos de tu página</h2><p>Completa lo que esté entre corchetes y ajusta lo que quieras. Los cambios se ven al instante.</p></div></div>
+          <label htmlFor="headline">Titular</label><input id="headline" name="headline" required maxLength={90} defaultValue={page.page.headline} />
+          <label htmlFor="subheadline">Subtítulo</label><textarea id="subheadline" name="subheadline" required maxLength={220} rows={2} defaultValue={page.page.subheadline} />
+          <label htmlFor="benefits">Beneficios (uno por línea: Título | explicación)</label><textarea id="benefits" name="benefits" required rows={6} maxLength={1600} defaultValue={page.page.benefits.map((b: any) => `${b.title} | ${b.text}`).join('\n')} />
+          <label htmlFor="faqs">Preguntas frecuentes (una por línea: Pregunta | respuesta)</label><textarea id="faqs" name="faqs" required rows={6} maxLength={2800} defaultValue={page.page.faqs.map((f: any) => `${f.q} | ${f.a}`).join('\n')} />
+          <div className="row"><div><label htmlFor="cta">Texto del botón</label><input id="cta" name="cta" required maxLength={40} defaultValue={page.page.cta} /></div><div><label htmlFor="whatsapp">WhatsApp (con código de país)</label><input id="whatsapp" name="whatsapp" type="tel" maxLength={20} defaultValue={page.page.whatsapp} /></div></div>
+          {saved === '1' && <p className="ok" role="status">Cambios guardados. Ya se ven en tu página.</p>}{saved === '0' && <p className="err">Revisa los textos: cada beneficio y pregunta necesita «texto | texto», y el WhatsApp de 8 a 15 dígitos.</p>}
+          <button>Guardar cambios</button></form>
+        <p className="note">{r.disclaimer}</p></>}
       {run.status === 'COMPLETED' && run.tool === 'transcribir' && <TranscriptResult result={r} />}
       {run.status === 'COMPLETED' && run.tool === 'imagen' && <><section className="card"><span className="eyebrow">TU IDEA, EN IMAGEN</span><h2>Lista para revisar y descargar</h2><img src={`/api/assets/${r.asset_id}`} alt="Diseño generado a partir de tu idea" style={{ width: '100%', maxHeight: 700, objectFit: 'contain', borderRadius: 20 }} /><p className="note">{r.disclaimer}</p><a className="btn" href={`/api/assets/${r.asset_id}?download=1`}>Descargar imagen ↓</a> <a className="btn ghost" href="/panel/tools/imagen">Crear otra imagen ↗</a></section><section className="card"><h2>El prompt usado</h2><p style={{ whiteSpace: 'pre-wrap' }}>{r.prompt}</p><CopyText text={r.prompt} /></section></>}
       {run.status === 'COMPLETED' && run.tool === 'guion' && <ScriptResult result={r} />}

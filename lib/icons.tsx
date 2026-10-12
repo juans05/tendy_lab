@@ -8,6 +8,8 @@ const P: Record<string, React.ReactNode> = {
   creativo: <><rect x="3" y="4" width="18" height="16" rx="2" /><circle cx="9" cy="10" r="2" /><path d="m21 16-5-5-8 8" /></>,
   whatsapp: <><path d="M21 12a9 9 0 0 1-13.5 7.8L3 21l1.2-4.5A9 9 0 1 1 21 12z" /><path d="M9 10h6M9 13h4" /></>,
   copy: <><path d="M4 20h4L19 9l-4-4L4 16z" /><path d="M13 7l4 4" /></>,
+  prompt: <><path d="M4 6h16M4 12h10M4 18h7" /><path d="m17 14 1.5 3 3 1.5-3 1.5-1.5 3-1.5-3-3-1.5 3-1.5z" /></>,
+  landing: <><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 8h18M7 12h6M7 16h4M15 12h2v4h-2z" /></>,
   producto: <><path d="M3 8l9-5 9 5v8l-9 5-9-5z" /><path d="M3 8l9 5 9-5M12 13v8" /></>,
   imagen3d: <><path d="M3 8l9-5 9 5v8l-9 5-9-5z" /><path d="M3 8l9 5 9-5M12 13v8" /></>,
   video3d: <><path d="M3 8l9-5 9 5v8l-9 5-9-5z" /><path d="m10 10 4 2.5-4 2.5z" /></>,

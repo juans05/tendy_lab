@@ -18,7 +18,7 @@ export async function POST(req: Request) {
   if (!parsed.success || f.get('website')) return go(`/pedido/${token}?e=invalid`)
   const receipt = randomBytes(24).toString('hex')
   const saved = await tx(async c => {
-    const { rows: [link] } = await c.query('select * from order_links where token=$1 and active=true for update', [token])
+    const { rows: [link] } = await c.query('select token,price,currency,active from order_links where token=$1 and active=true for update', [token])
     if (!link) return false
     const { rows: [count] } = await c.query("select count(*)::int n from customer_orders where link_token=$1 and created_at>now()-interval '1 minute'", [token])
     if (count.n >= 10) return false

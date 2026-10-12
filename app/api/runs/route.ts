@@ -1,6 +1,6 @@
 import { ImageBrief, MAX_REFS } from '@/lib/image-brief'
 import { imageAIReady } from '@/lib/image-ai'
-import { OBJECTIVES, PLATFORMS } from '@/lib/meta'
+import { OBJECTIVES, PLATFORMS, PROMPT_TARGETS } from '@/lib/meta'
 import { socialUrl } from '@/lib/social-download'
 import { z } from 'zod'
 import { currentUser, go } from '@/lib/auth'
@@ -91,6 +91,20 @@ export async function POST(req: Request) {
       const ids = await saveUploads(user.id, files, false, MAX_ANGLES, MIN_ANGLES)
       if (typeof ids === 'string') return back(ids)
       return go(`/panel/runs/${await createRun(user.id, tool, { assets: ids, description, look, aspect, brand: user.brand })}`)
+    }
+    if (tool === 'prompt') {
+      const description = String(f.get('description') || '').trim(), target = String(f.get('target'))
+      if (!description || description.length > 2000 || !Object.hasOwn(PROMPT_TARGETS, target) || files.length) return back('invalid')
+      return go(`/panel/runs/${await createRun(user.id, tool, { description, target, brand: user.brand, assets: [] })}`)
+    }
+    if (tool === 'landing') {
+      if (!user.brand.name || !user.brand.currency) return back('brand')
+      const description = String(f.get('description') || '').trim(), priceText = String(f.get('price') || '').trim()
+      const price = Number(priceText), whatsapp = String(f.get('whatsapp') || '').replace(/\D/g, '')
+      if (!description || description.length > 2000 || !(price > 0 && price <= 1e6) || (whatsapp && (whatsapp.length < 8 || whatsapp.length > 15))) return back('invalid')
+      const ids = await saveUploads(user.id, files, false, 5)
+      if (typeof ids === 'string') return back(ids)
+      return go(`/panel/runs/${await createRun(user.id, tool, { description, price: Math.round(price * 100), price_text: priceText, currency: user.brand.currency, whatsapp, brand: user.brand, assets: ids })}`)
     }
     const description = String(f.get('description') || '').trim()
     const duration = Number(f.get('duration'))

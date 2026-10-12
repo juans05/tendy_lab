@@ -77,6 +77,8 @@ create table if not exists customer_orders(
   quantity int not null check(quantity between 1 and 100), unit_price bigint not null,
   status text not null default 'Nuevo', receipt text unique not null,
   created_at timestamptz not null default now());
+alter table order_links add column if not exists page jsonb;
+alter table order_links add column if not exists photos bytea[];
 `
 let migration: Promise<void> | undefined
 export function migrate(): Promise<void> {
