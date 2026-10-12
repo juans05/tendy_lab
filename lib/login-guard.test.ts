@@ -26,3 +26,9 @@ test('login: los fallos desde otra IP no bloquean al dueño de la cuenta', () =>
   // la IP inventada al inicio de x-forwarded-for no cambia la clave
   assert.equal(attemptKey('a@b.c', new Headers({ 'x-forwarded-for': '7.7.7.7, 9.9.9.9' })), atacante)
 })
+test('login: cambiar de IP no salta el tope por correo', () => {
+  const ip = loginGuard(5, 15 * 60_000), mail = loginGuard(50, 15 * 60_000)
+  const blocked = (k: string) => ip.blocked(k, 100) || mail.blocked('a@b.c', 100)
+  for (let i = 0; i < 50; i++) { const k = attemptKey('a@b.c', new Headers({ 'x-forwarded-for': `10.0.0.${i}` })); ip.fail(k, i); mail.fail('a@b.c', i) }
+  assert.equal(blocked(attemptKey('a@b.c', new Headers({ 'x-forwarded-for': '10.0.1.1' }))), true)
+})
