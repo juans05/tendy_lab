@@ -52,7 +52,7 @@ export async function POST(req: Request) {
   if (!user) return go('/login')
   const f = await req.formData()
   const tool = String(f.get('tool')) as Tool
-  if (!(tool in COST)) return go('/panel')
+  if (!(tool in COST) || tool === 'landingpro') return go('/panel')
   const back = (e: string) => go(`/panel/tools/${tool === 'foto' ? 'imagen?modo=fondo&' : tool === 'video3d' ? 'imagen3d?modo=video&' : tool + '?'}e=${e}`) // foto y video3d viven como modos
 
   try {

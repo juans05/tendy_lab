@@ -689,7 +689,7 @@ td { padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: t
 
 /* Mejorar mi prompt */
 .prompt-box { white-space: pre-wrap; background: var(--cream); border: 1px dashed var(--orange); border-radius: var(--r); padding: 16px; font-size: .95rem; }
-.art-prompt, .art-landing { background: #fff4ea; }
+.art-prompt, .art-landing, .art-landingpro { background: #fff4ea; }
 
 /* Página de producto (pública) */
 .product-page { max-width: 680px; }
@@ -713,3 +713,11 @@ td { padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: t
 .pp-faqs summary { font-weight: 700; color: var(--navy); cursor: pointer; }
 .pp-faqs details p { margin: 8px 0 0; color: var(--muted); }
 .pp-wa-float { position: fixed; right: 18px; bottom: 18px; width: 58px; height: 58px; border-radius: 50%; background: #25d366; display: grid; place-items: center; font-size: 1.6rem; text-decoration: none; box-shadow: 0 8px 22px rgba(0,0,0,.2); z-index: 30; }
+
+/* Prompt pro para landing */
+.lp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 0 16px; }
+.lp-progress { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: .9rem; color: var(--muted); margin-bottom: 8px; }
+.lp-progress b { color: var(--navy); }
+.lp-progress span { flex: 1 1 160px; height: 8px; border-radius: 999px; background: var(--line); overflow: hidden; }
+.lp-progress i { display: block; height: 100%; background: var(--orange); transition: width .2s; }
+textarea.prompt-box { width: 100%; font-family: ui-monospace, Consolas, monospace; font-size: .85rem; }

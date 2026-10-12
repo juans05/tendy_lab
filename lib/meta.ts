@@ -14,6 +14,7 @@ export const TOOLS = {
   copy: { title: 'Copy para publicar', desc: 'Tres versiones de caption con CTA, hashtags y primer comentario para tu publicación.' },
   prompt: { title: 'Mejorar mi prompt', desc: 'Escribe tu idea o pega tu prompt. Te lo devolvemos detallado, con tu marca, listo para ChatGPT, Gemini, Meta AI o Lovable.' },
   landing: { title: 'Página de producto', desc: 'Sube fotos y datos de tu producto. Creamos una página de venta publicada, con botón de WhatsApp y formulario de pedido.' },
+  landingpro: { title: 'Prompt pro de landing', desc: 'Completa los datos de tu producto y llévate un prompt profesional para crear una landing única en Claude, ChatGPT o Lovable: investigación, diseño y SEO incluidos.' },
   profit: { title: '¿A cuánto lo vendo?', desc: 'Suma tus gastos, elige cuánto quieres ganar y calcula tu precio de venta.' },
 } as const
 
@@ -21,7 +22,7 @@ export const TOOLS = {
 export const TOOL_GROUPS: [string, string, (keyof typeof TOOLS)[]][] = [
   ['Crear contenido', 'Imágenes, guiones y textos con tu marca', ['imagen', 'imagen3d', 'guion', 'hooks', 'copy', 'prompt']],
   ['Analizar', 'Mejora lo que ya tienes antes de publicar', ['video', 'creativo', 'transcribir']],
-  ['Vender', 'Precio y atención para cerrar la venta', ['landing', 'profit', 'whatsapp']],
+  ['Vender', 'Precio y atención para cerrar la venta', ['landing', 'landingpro', 'profit', 'whatsapp']],
 ]
 // Mejorar mi prompt: destino → [nombre, dónde pegarlo, herramienta de Tendy que lo hace por ti]
 export const PROMPT_TARGETS: Record<string, [string, string, string, string]> = {

@@ -10,6 +10,7 @@ const P: Record<string, React.ReactNode> = {
   copy: <><path d="M4 20h4L19 9l-4-4L4 16z" /><path d="M13 7l4 4" /></>,
   prompt: <><path d="M4 6h16M4 12h10M4 18h7" /><path d="m17 14 1.5 3 3 1.5-3 1.5-1.5 3-1.5-3-3-1.5 3-1.5z" /></>,
   landing: <><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 8h18M7 12h6M7 16h4M15 12h2v4h-2z" /></>,
+  landingpro: <><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 8h18M7 12h5M7 16h3" /><path d="m17 12 1 2 2 1-2 1-1 2-1-2-2-1 2-1z" /></>,
   producto: <><path d="M3 8l9-5 9 5v8l-9 5-9-5z" /><path d="M3 8l9 5 9-5M12 13v8" /></>,
   imagen3d: <><path d="M3 8l9-5 9 5v8l-9 5-9-5z" /><path d="M3 8l9 5 9-5M12 13v8" /></>,
   video3d: <><path d="M3 8l9-5 9 5v8l-9 5-9-5z" /><path d="m10 10 4 2.5-4 2.5z" /></>,

@@ -1,4 +1,5 @@
 import { ImageForm } from '@/lib/image-form'
+import { LandingPromptForm } from '@/lib/landing-prompt-form'
 import { notFound, redirect } from 'next/navigation'
 import { coins, FREE_MONTHLY } from '@/lib/credits'
 import { OBJECTIVES, PLATFORMS, PROMPT_TARGETS, TOOLS, toolCost } from '@/lib/meta'
@@ -23,6 +24,7 @@ export default async function Tool({ params, searchParams }: { params: Promise<{
   const { tool } = await params
   const { e, modo } = await searchParams
   if (tool === 'foto') redirect(`/panel/tools/imagen?modo=fondo${e ? `&e=${e}` : ''}`) // foto es un modo de Crea una imagen
+  if (tool === 'prompt' && modo === 'landing') redirect('/panel/tools/landingpro')
   if (tool === 'video3d') redirect(`/panel/tools/imagen3d?modo=video${e ? `&e=${e}` : ''}`) // video3d es un modo de Tu producto en 3D
   const form = tool === 'imagen' && modo === 'fondo' ? 'foto' : tool === 'imagen3d' && modo === 'video' ? 'video3d' : tool
   if (!(tool in TOOLS)) notFound()
@@ -32,10 +34,12 @@ export default async function Tool({ params, searchParams }: { params: Promise<{
   return (
     <>
       <a className="tool-back" href="/panel">← Todas las herramientas</a>
-      <div className="tool-page-heading"><Icon name={tool} /><div><span className="eyebrow">{tool === 'profit' ? 'LOS NÚMEROS DE TU NEGOCIO' : 'DALE UNA NUEVA MIRADA A TU CONTENIDO'}</span><h1>{t.title}</h1><p className="muted">{t.desc}</p></div></div>
+      <div className="tool-page-heading"><Icon name={tool} /><div><span className="eyebrow">{tool === 'profit' ? 'LOS NÚMEROS DE TU NEGOCIO' : tool === 'landingpro' ? 'MINIAPP · GRATIS' : 'DALE UNA NUEVA MIRADA A TU CONTENIDO'}</span><h1>{t.title}</h1><p className="muted">{t.desc}</p></div></div>
       {e && <div className="err">{ERR[e] ?? ERR.error}{e === 'credits' && <> <a href="/panel/buy">Comprar monedas ↗</a></>}</div>}
       {tool === 'imagen' && <div className="row" role="tablist"><a className={form === 'imagen' ? 'btn' : 'btn ghost'} role="tab" aria-selected={form === 'imagen'} href="/panel/tools/imagen">Crear desde cero</a><a className={form === 'foto' ? 'btn' : 'btn ghost'} role="tab" aria-selected={form === 'foto'} href="/panel/tools/imagen?modo=fondo">Editar mi foto (fondo y más)</a></div>}
       {tool === 'imagen3d' && <div className="row" role="tablist"><a className={form === 'imagen3d' ? 'btn' : 'btn ghost'} role="tab" aria-selected={form === 'imagen3d'} href="/panel/tools/imagen3d">Imagen 3D</a><a className={form === 'video3d' ? 'btn' : 'btn ghost'} role="tab" aria-selected={form === 'video3d'} href="/panel/tools/imagen3d?modo=video">Video 3D (8 s)</a></div>}
+      {tool === 'prompt' && <p className="note">¿Vas a crear una landing page? Usa la MiniApp <a href="/panel/tools/landingpro">Prompt pro de landing ✦</a>: arma un prompt completo con investigación, diseño y SEO.</p>}
+      {tool === 'landingpro' ? <LandingPromptForm brand={user.brand} /> :
       <form className={form === 'imagen' ? 'form image-tool-form' : 'form'} method="post" action="/api/runs" encType="multipart/form-data">
         <div className="form-heading"><span className="form-step">01</span><div><h2>{form === 'profit' ? 'Calcula tu precio en dos pasos' : form === 'prompt' ? 'Cuéntanos qué quieres lograr' : form === 'landing' ? 'Arma tu página de venta' : 'Prepara tu análisis'}</h2><p>{form === 'profit' ? 'Moneda: ' + (user.brand.currency || 'PEN') + '. Escribe los montos por una unidad.' : 'Añade tu material y el contexto para obtener recomendaciones útiles.'}</p></div></div>
         <input type="hidden" name="tool" value={form} />
@@ -60,7 +64,7 @@ export default async function Tool({ params, searchParams }: { params: Promise<{
         )}
         <p className="note">{cost ? <>Costo: <b>{coins(cost)}{form === 'imagen' || form === 'foto' || form === 'imagen3d' ? ' por imagen' : form === 'video3d' ? ' por video de 8 segundos' : form === 'transcribir' ? ' · transcripción y paráfrasis incluidas' : ''}</b>. Si el análisis falla, se devuelven automáticamente.</> : <b>Gratis</b>}</p>
         <button>{form === 'profit' ? 'Ver a cuánto venderlo' : form === 'guion' ? 'Crear mi guion' : form === 'imagen' ? 'Generar mi imagen' : form === 'transcribir' ? 'Pasar mi video a texto' : form === 'foto' ? 'Preparar mi foto' : form === 'imagen3d' ? 'Crear mi imagen 3D' : form === 'video3d' ? 'Crear mi video 3D' : form === 'whatsapp' ? 'Crear mis respuestas' : form === 'copy' ? 'Escribir mi publicación' : form === 'prompt' ? 'Mejorar mi prompt' : form === 'landing' ? 'Crear mi página' : 'Analizar mi contenido'} <span aria-hidden="true">↗</span></button>
-      </form>
+      </form>}
     </>
   )
 }
