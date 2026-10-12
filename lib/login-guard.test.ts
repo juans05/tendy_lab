@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { loginGuard } from './login-guard'
+import { attemptKey, loginGuard } from './login-guard'
 test('login: bloquea tras 5 fallos en 15 minutos y se libera después', () => {
   const g = loginGuard(5, 15 * 60_000)
   const t0 = 1_000_000
@@ -15,4 +15,14 @@ test('login: un acceso correcto limpia los fallos', () => {
   for (let i = 0; i < 4; i++) g.fail('a@b.c', i)
   g.ok('a@b.c'); g.fail('a@b.c', 5)
   assert.equal(g.blocked('a@b.c', 6), false)
+})
+test('login: los fallos desde otra IP no bloquean al dueño de la cuenta', () => {
+  const g = loginGuard(5, 15 * 60_000)
+  const atacante = attemptKey('a@b.c', new Headers({ 'x-forwarded-for': '1.1.1.1, 9.9.9.9' }))
+  const dueno = attemptKey('a@b.c', new Headers({ 'x-forwarded-for': '2.2.2.2' }))
+  for (let i = 0; i < 5; i++) g.fail(atacante, i)
+  assert.equal(g.blocked(atacante, 10), true)
+  assert.equal(g.blocked(dueno, 10), false)
+  // la IP inventada al inicio de x-forwarded-for no cambia la clave
+  assert.equal(attemptKey('a@b.c', new Headers({ 'x-forwarded-for': '7.7.7.7, 9.9.9.9' })), atacante)
 })

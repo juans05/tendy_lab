@@ -13,18 +13,18 @@ Miniapps: Analiza mi Video, Hooks desde Producto, Analiza mi Creativo, Profit Ca
 ```bash
 npm install
 npm run db            # opcional: Postgres local embebido; si no, usa DB_* / DATABASE_URL
-cp .env.example .env  # y pon GEMINI_API_KEY, ADMIN_EMAIL y la BD (DB_*)
+cp .env.example .env  # y pon GEMINI_API_KEY y la BD (DB_*)
 npm test              # fórmulas y scoring
 npm run dev
 ```
 
-Requiere `ffmpeg` y `ffprobe` en el PATH (o `FFMPEG_PATH`). El primer usuario que se registre con `ADMIN_EMAIL` es admin y ve `/admin`.
+Requiere `ffmpeg` y `ffprobe` en el PATH (o `FFMPEG_PATH`). Para ser admin (ve `/admin`): regístrate y luego en la BD `update users set is_admin = true where email = 'tu@correo';`. Por seguridad nadie es admin solo por registrarse.
 
 ## Railway
 
 1. Nuevo proyecto → **PostgreSQL** + servicio desde este repo (usa el `Dockerfile`, que instala ffmpeg).
 2. Variables del servicio: `DATABASE_URL` (referencia al Postgres de Railway, URL interna), `GEMINI_API_KEY`,
-   `GEMINI_MODEL` (opcional), `ADMIN_EMAIL`.
+   `GEMINI_MODEL` (opcional).
 3. Las tablas se crean solas al arrancar (`instrumentation.ts`). Un solo proceso hace web y worker.
 
 ## Qué NO está (a propósito, por el plazo)

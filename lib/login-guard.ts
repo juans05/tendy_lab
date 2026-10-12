@@ -10,5 +10,10 @@ export function loginGuard(max: number, windowMs: number) {
     ok: (email: string) => { fails.delete(key(email)) },
   }
 }
+// Clave correo + IP: los fallos de un atacante no bloquean al dueño de la cuenta desde su propia IP.
+// Se toma la última IP de x-forwarded-for (la agrega el proxy de Railway; las primeras las puede inventar el cliente).
+// ponytail: no frena fuerza bruta repartida en muchas IPs; añadir un tope global por correo si llega a pasar.
+export const attemptKey = (email: string, headers: Headers) =>
+  `${email}|${(headers.get('x-forwarded-for') ?? '').split(',').pop()!.trim()}`
 const g = globalThis as any
 export const loginAttempts: ReturnType<typeof loginGuard> = (g.__loginGuard ??= loginGuard(5, 15 * 60_000))
