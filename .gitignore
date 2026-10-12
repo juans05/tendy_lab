@@ -1,0 +1,9 @@
+node_modules
+.next
+.pgdata
+.env
+.env.local
+.next-production
+.runtime
+*.log
+tsconfig.tsbuildinfo
