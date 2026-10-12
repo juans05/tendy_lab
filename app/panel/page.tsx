@@ -8,8 +8,10 @@ export default async function Dashboard() {
   const b = await balance(user.id)
   const shown = TOOL_GROUPS.flatMap(g => g[2])
   const name = user.brand.name || user.email.split('@')[0]
-  const benefits: Record<string, [string, string]> = {
+  const benefits: Record<keyof typeof TOOLS, [string, string]> = { // tipado por herramienta: si falta una, no compila
     imagen: ['Tu idea, con un diseño que habla como tu marca.', '7 pasos · Imagen · Prompt para copiar'],
+    imagen3d: ['Tu producto con volumen, listo para destacar.', '2 a 3 fotos · Imagen 3D · Video de 8 s'],
+    video3d: ['Tu producto girando en un video corto.', '2 a 3 fotos · Video de 8 s'],
     transcribir: ['Convierte lo que escuchas en ideas para tu marca.', 'Video · Texto con tiempos · Parafrasear'],
     guion: ['Qué decir y qué grabar, escena por escena.', '15, 30 o 60 segundos · Tu marca'],
     foto: ['Dale a tu producto un fondo listo para vender.', 'Catálogo · Anuncio · Descarga'],
@@ -41,7 +43,7 @@ export default async function Dashboard() {
             <div className="tool-card-top"><Icon name={k} /><span className="tool-credit">{toolCost(k) ? coins(toolCost(k)) : FREE_CAPPED.includes(k) ? `Gratis · ${FREE_MONTHLY} al mes` : 'Gratis'}</span></div>
             <h3>{TOOLS[k].title}</h3>
             <p>{benefits[k][0]}</p>
-            <div className={`tool-art art-${k}`} aria-hidden="true">{k === 'video' || k === 'transcribir' ? <><span className="art-play">▶</span><span className="art-timeline"><i /><i /><i /><i /><i /></span></> : k === 'hooks' ? <><span>¿Y si empiezas así?</span><span>Tu próxima gran idea ✦</span></> : k === 'creativo' ? <><span className="art-ad"><i /><b>Tu producto.<br />Todo el foco.</b></span><span className="art-check">✓</span></> : k === 'imagen' ? <><span className="art-frame"><i /><b /></span><span className="art-spark">✦</span></> : k === 'guion' ? <span className="art-script"><span><em>0–5 s</em><i /></span><span><em>5–15 s</em><i /></span><span><em>15–30 s</em><i /></span></span> : k === 'copy' ? <span className="art-caption"><b>Olvídate de la plancha ✦</b><i /><i /><em>#AlgodonPima #HechoEnPeru</em></span> : k === 'whatsapp' ? <span className="art-chat"><span>¿Precio? 👀</span><span>S/ 45 · ¿Qué talla buscas?</span></span> : <><span className="art-chart"><i /><i /><i /><i /></span><span className="art-profit">Conoce tu margen ↗</span></>}</div>
+            <div className={`tool-art art-${k}`} aria-hidden="true">{k === 'video' || k === 'transcribir' ? <><span className="art-play">▶</span><span className="art-timeline"><i /><i /><i /><i /><i /></span></> : k === 'hooks' ? <><span>¿Y si empiezas así?</span><span>Tu próxima gran idea ✦</span></> : k === 'creativo' ? <><span className="art-ad"><i /><b>Tu producto.<br />Todo el foco.</b></span><span className="art-check">✓</span></> : k === 'imagen3d' ? <><span className="art-frame"><i /><b /></span><span className="art-spark">3D</span></> : k === 'imagen' ? <><span className="art-frame"><i /><b /></span><span className="art-spark">✦</span></> : k === 'guion' ? <span className="art-script"><span><em>0–5 s</em><i /></span><span><em>5–15 s</em><i /></span><span><em>15–30 s</em><i /></span></span> : k === 'copy' ? <span className="art-caption"><b>Olvídate de la plancha ✦</b><i /><i /><em>#AlgodonPima #HechoEnPeru</em></span> : k === 'whatsapp' ? <span className="art-chat"><span>¿Precio? 👀</span><span>S/ 45 · ¿Qué talla buscas?</span></span> : <><span className="art-chart"><i /><i /><i /><i /></span><span className="art-profit">Conoce tu margen ↗</span></>}</div>
             <span className="tool-features">{benefits[k][1]}</span><div className="tool-card-bottom"><b>{k === 'profit' ? 'Calcular rentabilidad' : 'Empezar ahora'}</b><span aria-hidden="true">↗</span></div>
           </a>
         ))}</div></section>)}
