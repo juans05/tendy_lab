@@ -10,11 +10,19 @@ const load = () => loaded ??= (async () => {
   return Promise.all([AutoModel.from_pretrained(MODEL, { dtype: 'fp32' }), AutoProcessor.from_pretrained(MODEL)])
 })().catch(e => { loaded = undefined; throw e }) // si falla la descarga, el siguiente intento reintenta
 
-export async function removeBackground(data: Buffer) {
+// Un recorte a la vez: cada inferencia usa ~1 GB y el worker corre 2 jobs en paralelo.
+let line: Promise<unknown> = Promise.resolve()
+export function removeBackground(data: Buffer) {
+  const job = line.then(() => cutout(data))
+  line = job.catch(() => {})
+  return job
+}
+
+async function cutout(data: Buffer) {
+  // Tope de 25 MP al decodificar (bombas de descompresión), orientación EXIF y máximo 2048 px para la inferencia.
+  const { data: rgb, info } = await sharp(data, { limitInputPixels: 25_000_000 }).rotate().resize({ width: 2048, height: 2048, fit: 'inside', withoutEnlargement: true }).removeAlpha().raw().toBuffer({ resolveWithObject: true })
   const { RawImage } = await import('@huggingface/transformers')
   const [model, processor] = await load()
-  // Orientación EXIF aplicada y tope de 2048 px para no disparar la memoria con fotos de cámara.
-  const { data: rgb, info } = await sharp(data).rotate().resize({ width: 2048, height: 2048, fit: 'inside', withoutEnlargement: true }).removeAlpha().raw().toBuffer({ resolveWithObject: true })
   const image = new RawImage(new Uint8ClampedArray(rgb), info.width, info.height, 3)
   const { pixel_values } = await processor(image)
   const { output_image } = await model({ input_image: pixel_values })

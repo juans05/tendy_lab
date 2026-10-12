@@ -6,8 +6,9 @@ const FAIL = 'El servicio de video no respondió correctamente. Inténtalo más 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms))
 
 // Con imágenes de referencia Veo exige 8 s; máximo 3 referencias.
+// predictLongRunning usa el formato Vertex (bytesBase64Encoded); inlineData lo rechaza con 400 aunque la doc lo muestre.
 export const veoBody = (prompt: string, images: Img[], aspect: string) => ({
-  instances: [{ prompt, referenceImages: images.slice(0, 3).map(i => ({ image: { inlineData: { mimeType: i.mime, data: i.data.toString('base64') } }, referenceType: 'asset' })) }],
+  instances: [{ prompt, referenceImages: images.slice(0, 3).map(i => ({ image: { bytesBase64Encoded: i.data.toString('base64'), mimeType: i.mime }, referenceType: 'asset' })) }],
   parameters: { aspectRatio: aspect, durationSeconds: 8, resolution: '720p' },
 })
 

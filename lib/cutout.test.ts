@@ -1,6 +1,12 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { wantsCutout } from './cutout'
+import sharp from 'sharp'
+import { removeBackground, wantsCutout } from './cutout'
+
+test('foto: imágenes gigantes se rechazan antes de cargar el modelo', async () => {
+  const huge = await sharp({ create: { width: 6000, height: 6000, channels: 3, background: '#fff' } }).png().toBuffer() // 36 MP en pocos KB
+  await assert.rejects(removeBackground(huge), /pixel limit/i)
+})
 
 test('foto: quitar el fondo usa el recorte real', () => {
   assert.equal(wantsCutout('sinfondo'), true)

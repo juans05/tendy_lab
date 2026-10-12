@@ -7,7 +7,7 @@ test('video3d: cuerpo de Veo con máximo 3 referencias tipo asset y 8 s', () => 
   const img = { mime: 'image/png', data: Buffer.from('x') }
   const b = veoBody('p', [img, img, img, img], '9:16')
   assert.equal(b.instances[0].referenceImages.length, 3)
-  assert.deepEqual(b.instances[0].referenceImages[0], { image: { inlineData: { mimeType: 'image/png', data: 'eA==' } }, referenceType: 'asset' })
+  assert.deepEqual(b.instances[0].referenceImages[0], { image: { bytesBase64Encoded: 'eA==', mimeType: 'image/png' }, referenceType: 'asset' })
   assert.deepEqual(b.parameters, { aspectRatio: '9:16', durationSeconds: 8, resolution: '720p' })
 })
 
