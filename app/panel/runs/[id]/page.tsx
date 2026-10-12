@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { notFound } from 'next/navigation'
 import { requireUser } from '@/lib/auth'
 import { q } from '@/lib/db'
@@ -22,7 +23,7 @@ function Score({ r }: { r: any }) {
           <span className="tag">{r.disclaimer}</span>
         </div>
       </div>
-      <h2>Puntaje por dimensión</h2>
+      <Title tip="Calificamos tu contenido en varios aspectos del 0 al 100. El peso indica cuánto influye cada aspecto en el puntaje total.">Puntaje por dimensión</Title>
       <div className="card">
         {r.dimensions.map((d: any) => (
           <div className="dim" key={d.name}>
@@ -35,16 +36,51 @@ function Score({ r }: { r: any }) {
     </>
   )
 }
-const Hooks = ({ hooks }: { hooks: any[] }) => (
-  <div className="card">
-    {hooks.map((h, i) => (
-      <div className="hook" key={i}>
-        <span className="ang">{h.angle}</span><b>{h.text}</b>
-        <small>Por qué funciona: {h.why}</small><small>Primer plano: {h.visual_opening}</small>
+const Tip = ({ text }: { text: string }) => <span className="tip" tabIndex={0} role="note" aria-label={text} data-tip={text}>?</span>
+const Title = ({ children, tip }: { children: ReactNode; tip: string }) => <h2 className="tipped">{children} <Tip text={tip} /></h2>
+
+const ANGLE_INFO: Record<string, [string, string, string]> = {
+  curiosidad: ['🤔', 'Curiosidad', 'Deja una pregunta en el aire para que se queden hasta el final por la respuesta.'],
+  pov: ['👀', 'POV (punto de vista)', 'Pone a tu cliente dentro de la escena, como si lo viviera en primera persona.'],
+  problema: ['😣', 'Problema', 'Nombra el dolor que tu producto resuelve; quien lo sufre se detiene a mirar.'],
+  humor: ['😂', 'Humor', 'Hace reír y provoca que lo comenten y compartan con amigos.'],
+  venta: ['💰', 'Venta directa', 'Va directo al beneficio, la oferta o el precio para quien ya está listo para comprar.'],
+  ugc: ['🤳', 'UGC (cliente real)', 'Suena como un cliente contando su experiencia; genera confianza.'],
+}
+const Hooks = ({ hooks }: { hooks: any[] }) => {
+  const groups = [...new Set(hooks.map(h => h.angle))].map(a => [a, hooks.filter(h => h.angle === a)] as const)
+  let n = 0
+  return (
+    <>
+      <div className="hooks-summary">
+        <div><strong>{hooks.length}</strong><span>hooks listos</span></div>
+        <div><strong>{groups.length}</strong><span>ángulos distintos</span></div>
+        <p>Un <b>hook</b> es la primera frase o los primeros 3 segundos de tu video: lo que hace que la gente deje de deslizar. Prueba varios ángulos y quédate con el que más retiene.</p>
       </div>
-    ))}
-  </div>
-)
+      {groups.map(([a, list]) => {
+        const [emoji, name, desc] = ANGLE_INFO[a] ?? ['✨', a, '']
+        return (
+          <section className="card hook-group" key={a}>
+            <header><span className="hook-emoji" aria-hidden="true">{emoji}</span><div><h3>{name} <span className="tag">· {list.length} {list.length === 1 ? 'hook' : 'hooks'}</span></h3>{desc && <p className="tag">{desc}</p>}</div></header>
+            {list.map((h, i) => (
+              <article className="hook" key={i}>
+                <span className="hook-n">#{++n}</span>
+                <div>
+                  <b>“{h.text}”</b>
+                  <dl>
+                    <dt>💡 Por qué funciona</dt><dd>{h.why}</dd>
+                    <dt>🎬 Cómo abrir el video</dt><dd>{h.visual_opening}</dd>
+                  </dl>
+                  <CopyText text={h.text} />
+                </div>
+              </article>
+            ))}
+          </section>
+        )
+      })}
+    </>
+  )
+}
 const Items = ({ rows, a, b, label }: { rows: any[]; a: string; b: string; label?: (r: any) => string }) => (
   <div className="card">
     {rows.map((c, i) => (
@@ -101,7 +137,7 @@ export default async function RunPage({ params }: { params: Promise<{ id: string
       )}
 
       {run.status === 'COMPLETED' && run.tool === 'hooks' && (
-        <><p className="muted">Producto que vimos: {r.product}</p><Hooks hooks={r.hooks} /><p className="tag">{r.disclaimer}</p></>
+        <><p className="muted">Producto que vimos: {r.product}</p><Title tip="Frases de apertura agrupadas por ángulo. Copia la que más te guste y úsala como primera línea o primeros segundos de tu video.">Tus hooks por ángulo</Title><Hooks hooks={r.hooks} /><p className="tag">{r.disclaimer}</p></>
       )}
       {run.status === 'COMPLETED' && run.tool === 'transcribir' && <TranscriptResult result={r} />}
       {run.status === 'COMPLETED' && run.tool === 'imagen' && <><section className="card"><span className="eyebrow">TU IDEA, EN IMAGEN</span><h2>Lista para revisar y descargar</h2><img src={`/api/assets/${r.asset_id}`} alt="Diseño generado a partir de tu idea" style={{ width: '100%', maxHeight: 700, objectFit: 'contain', borderRadius: 20 }} /><p className="note">{r.disclaimer}</p><a className="btn" href={`/api/assets/${r.asset_id}?download=1`}>Descargar imagen ↓</a> <a className="btn ghost" href="/panel/tools/imagen">Crear otra imagen ↗</a></section><section className="card"><h2>El prompt usado</h2><p style={{ whiteSpace: 'pre-wrap' }}>{r.prompt}</p><CopyText text={r.prompt} /></section></>}
@@ -113,18 +149,18 @@ export default async function RunPage({ params }: { params: Promise<{ id: string
       {run.status === 'COMPLETED' && run.tool === 'foto' && <><div className="photo-comparison"><section className="card"><h3>Tu foto original</h3><img src={`/api/assets/${r.original_id}`} alt="Foto original del producto" /></section><section className="card"><h3>{r.style === 'sinfondo' ? 'Sin fondo' : r.style === 'libre' ? 'Con tus cambios' : `Lista para ${r.style === 'catalogo' ? 'catálogo' : 'anuncio'}`}</h3><img src={`/api/assets/${r.asset_id}`} alt={r.style === 'sinfondo' ? 'Producto recortado sin fondo' : 'Producto con fondo editado por IA'} style={r.style === 'sinfondo' ? { background: 'repeating-conic-gradient(#d9d9d9 0 25%, #fff 0 50%) 50% / 20px 20px' } : undefined} /><a className="btn" href={`/api/assets/${r.asset_id}?download=1`}>Descargar PNG ↓</a></section></div><p className="note">{r.disclaimer}</p></>}
 
       {run.status === 'COMPLETED' && run.tool === 'creativo' && (
-        <><Score r={r} /><h2>Cambios priorizados</h2><Items rows={r.changes} a="change" b="why" /></>
+        <><Score r={r} /><Title tip="Mejoras ordenadas por impacto: empieza por las marcadas como Crítico.">Cambios priorizados</Title><Items rows={r.changes} a="change" b="why" /></>
       )}
 
       {run.status === 'COMPLETED' && run.tool === 'video' && (
         <>
           <Score r={r} />
-          <h2>Fallas y momentos clave</h2>
+          <Title tip="Lo que vimos en tu video, segundo a segundo. Los tiempos son aproximados.">Fallas y momentos clave</Title>
           <Items rows={r.findings} a="issue" b="evidence" label={f => `Segundo ${f.timestamp_s}: ${f.issue}`} />
-          <h2>Qué hacer ahora</h2>
+          <Title tip="Acciones concretas para tu próxima versión del video y el efecto que esperamos de cada una.">Qué hacer ahora</Title>
           <Items rows={r.actions} a="action" b="expected_effect" />
-          <h2>Hooks alternativos</h2><Hooks hooks={r.alternative_hooks} />
-          <h2>Llamado a la acción sugerido</h2><div className="card">{r.cta_suggestion}</div>
+          <Title tip="Otras formas de empezar tu video para captar atención en los primeros segundos. Grábalas y compara cuál retiene más.">Hooks alternativos</Title><Hooks hooks={r.alternative_hooks} />
+          <Title tip="La frase final que le dice a tu cliente qué hacer: escribir, comprar, comentar, etc.">Llamado a la acción sugerido</Title><div className="card">{r.cta_suggestion}</div>
         </>
       )}
     </>
