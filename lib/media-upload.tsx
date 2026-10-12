@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Icon } from './icons'
 
-export function MediaUpload({ tool }: { tool: 'video' | 'hooks' | 'creativo' | 'referencias' }) {
+export function MediaUpload({ tool }: { tool: 'video' | 'hooks' | 'creativo' | 'referencias' | 'angulos' }) {
   const input = useRef<HTMLInputElement>(null)
   const [files, setFiles] = useState<File[]>([])
   const [previews, setPreviews] = useState<string[]>([])
@@ -11,7 +11,8 @@ export function MediaUpload({ tool }: { tool: 'video' | 'hooks' | 'creativo' | '
   const [dragging, setDragging] = useState(false)
   const video = tool === 'video'
   const refs = tool === 'referencias' // opcional: imágenes de referencia para Crea una imagen
-  const max = tool === 'hooks' ? 5 : refs ? 3 : 1
+  const angles = tool === 'angulos' // Tu producto en 3D: de 2 a 3 ángulos del mismo producto
+  const max = tool === 'hooks' ? 5 : refs || angles ? 3 : 1
   const limit = (video ? 100 : 10) * 1024 * 1024
   const accept = video ? 'video/mp4,video/quicktime,video/webm' : 'image/jpeg,image/png,image/webp'
 
@@ -20,6 +21,7 @@ export function MediaUpload({ tool }: { tool: 'video' | 'hooks' | 'creativo' | '
     setPreviews(urls)
     return () => urls.forEach(url => URL.revokeObjectURL(url))
   }, [files])
+  useEffect(() => { if (angles) input.current?.setCustomValidity(files.length === 1 ? 'Agrega al menos 2 fotos desde ángulos distintos.' : '') }, [angles, files])
 
   function sync(next: File[]) {
     const transfer = new DataTransfer()
@@ -37,7 +39,7 @@ export function MediaUpload({ tool }: { tool: 'video' | 'hooks' | 'creativo' | '
     sync(message ? files : next)
   }
   return <div className="media-uploader">
-    <div className="upload-heading"><label htmlFor="files">{video ? 'Tu video' : tool === 'hooks' ? 'Fotos de tu producto' : refs ? 'Imágenes de referencia (opcional)' : 'Tu imagen'}</label><span>{refs ? 'Hasta 3 imágenes' : max > 1 ? 'De 1 a 5 imágenes' : '1 archivo'}</span></div>
+    <div className="upload-heading"><label htmlFor="files">{video ? 'Tu video' : tool === 'hooks' ? 'Fotos de tu producto' : angles ? 'Fotos desde distintos ángulos' : refs ? 'Imágenes de referencia (opcional)' : 'Tu imagen'}</label><span>{refs ? 'Hasta 3 imágenes' : angles ? 'De 2 a 3 imágenes' : max > 1 ? 'De 1 a 5 imágenes' : '1 archivo'}</span></div>
     <div className={`upload-zone${dragging ? ' is-dragging' : ''}${files.length ? ' has-files' : ''}`} onDragOver={e => { e.preventDefault(); setDragging(true) }} onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragging(false) }} onDrop={e => { e.preventDefault(); setDragging(false); select(Array.from(e.dataTransfer.files)) }}>
       <input ref={input} className="upload-native" id="files" name="files" type="file" accept={accept} multiple={max > 1} required={!refs} aria-describedby="upload-help upload-error" onChange={e => { const selected = Array.from(e.currentTarget.files || []); if (selected.length) select(selected) }} />
       {!files.length ? <><Icon name={video ? 'video' : 'creativo'} /><h3>{dragging ? 'Suelta tu archivo aquí' : video ? 'Dale una nueva mirada a tu video' : refs ? 'Tu producto real o un estilo que te guste' : 'Tu próximo análisis empieza aquí'}</h3><p>Arrastra {max > 1 ? 'tus imágenes' : 'tu archivo'} aquí o selecciónalo desde tu dispositivo.</p></> : <div className="upload-previews">{files.map((file, i) => <article className="upload-file" key={`${file.name}-${file.size}-${file.lastModified}`}>

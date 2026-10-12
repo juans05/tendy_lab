@@ -1,7 +1,7 @@
 import { q } from './db'
 
 // Monedas en décimas (0.5 moneda = 5) para no usar floats. Costos según funcional 7.2.
-export const COST = { profit: 0, hooks: 10, creativo: 10, video: 30, guion: 10, foto: 30, transcribir: 100, imagen: 30, whatsapp: 0, copy: 0 } as const
+export const COST = { profit: 0, hooks: 10, creativo: 10, video: 30, guion: 10, foto: 30, transcribir: 100, imagen: 30, imagen3d: 30, video3d: 150, whatsapp: 0, copy: 0 } as const
 export type Tool = keyof typeof COST
 export const SIGNUP_GRANT = 50
 // Plataforma gratis; se pagan solo las monedas. Precios en soles; PACKS en monedas de pantalla (1 moneda = 10 décimas).

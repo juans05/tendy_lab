@@ -8,6 +8,7 @@ import { q } from '@/lib/db'
 import { COST, type Tool } from '@/lib/credits'
 import { createRun, FreeLimit, NoCredits } from '@/lib/runs'
 import { profit, suggestedPrice } from '@/lib/profit'
+import { ASPECTS, LOOKS, MAX_ANGLES, MIN_ANGLES } from '@/lib/product3d'
 
 const MB = 1024 * 1024
 const LIMITS = { image: 10 * MB, video: 100 * MB } // ponytail: video 100 MB (bytea); el funcional pide 200 MB con R2
@@ -51,7 +52,7 @@ export async function POST(req: Request) {
   const f = await req.formData()
   const tool = String(f.get('tool')) as Tool
   if (!(tool in COST)) return go('/panel')
-  const back = (e: string) => go(`/panel/tools/${tool === 'foto' ? 'imagen?modo=fondo&' : tool + '?'}e=${e}`) // foto vive como modo de imagen
+  const back = (e: string) => go(`/panel/tools/${tool === 'foto' ? 'imagen?modo=fondo&' : tool === 'video3d' ? 'imagen3d?modo=video&' : tool + '?'}e=${e}`) // foto y video3d viven como modos
 
   try {
     if (tool === 'profit') {
@@ -82,12 +83,21 @@ export async function POST(req: Request) {
       if (typeof ids === 'string') return back(ids)
       return go(`/panel/runs/${await createRun(user.id, tool, { brief: brief.data, brand: user.brand, assets: ids })}`)
     }
+    if (tool === 'imagen3d' || tool === 'video3d') {
+      const description = String(f.get('description') || '').trim(), look = String(f.get('look')), aspect = String(f.get('aspect'))
+      if (!description || description.length > 2000 || !Object.hasOwn(LOOKS[tool], look) || !(ASPECTS[tool] as readonly string[]).includes(aspect)) return back('invalid')
+      if (tool === 'imagen3d' ? !imageAIReady() : !process.env.GEMINI_API_KEY) return back(tool === 'imagen3d' ? 'image_config' : 'video_config')
+      const ids = await saveUploads(user.id, files, false, MAX_ANGLES, MIN_ANGLES)
+      if (typeof ids === 'string') return back(ids)
+      return go(`/panel/runs/${await createRun(user.id, tool, { assets: ids, description, look, aspect, brand: user.brand })}`)
+    }
     const description = String(f.get('description') || '').trim()
     const duration = Number(f.get('duration'))
     const style = String(f.get('style'))
     if (description.length > 2000 || (['guion', 'foto', 'whatsapp', 'copy'].includes(tool) && !description)) return back('invalid')
     if (tool === 'guion' && ![15, 30, 60].includes(duration)) return back('invalid')
-    if (tool === 'foto' && !['catalogo', 'anuncio'].includes(style)) return back('invalid')
+    const request = String(f.get('request') || '').trim()
+    if (tool === 'foto' && (!['catalogo', 'anuncio', 'libre'].includes(style) || request.length > 500 || (style === 'libre' && !request))) return back('invalid')
     if (tool === 'foto' && !imageAIReady()) return back('image_config')
     if (tool === 'transcribir' && !process.env.GEMINI_API_KEY) return back('audio_config')
     const objective = String(f.get('objective') ?? 'ventas')
@@ -109,7 +119,7 @@ export async function POST(req: Request) {
     const isVideo = tool === 'video' || tool === 'transcribir'
     const ids = await saveUploads(user.id, files, isVideo, tool === 'hooks' ? 5 : 1)
     if (typeof ids === 'string') return back(ids)
-    const id = await createRun(user.id, tool, { assets: ids, objective, platform, use_brand: true, brand: user.brand, description, ...(tool === 'guion' ? { duration } : tool === 'foto' ? { style } : {}) })
+    const id = await createRun(user.id, tool, { assets: ids, objective, platform, use_brand: true, brand: user.brand, description, ...(tool === 'guion' ? { duration } : tool === 'foto' ? { style, request } : {}) })
     return go(`/panel/runs/${id}`)
   } catch (e) {
     if (e instanceof NoCredits) return back('credits')

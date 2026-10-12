@@ -9,6 +9,8 @@ const P: Record<string, React.ReactNode> = {
   whatsapp: <><path d="M21 12a9 9 0 0 1-13.5 7.8L3 21l1.2-4.5A9 9 0 1 1 21 12z" /><path d="M9 10h6M9 13h4" /></>,
   copy: <><path d="M4 20h4L19 9l-4-4L4 16z" /><path d="M13 7l4 4" /></>,
   producto: <><path d="M3 8l9-5 9 5v8l-9 5-9-5z" /><path d="M3 8l9 5 9-5M12 13v8" /></>,
+  imagen3d: <><path d="M3 8l9-5 9 5v8l-9 5-9-5z" /><path d="M3 8l9 5 9-5M12 13v8" /></>,
+  video3d: <><path d="M3 8l9-5 9 5v8l-9 5-9-5z" /><path d="m10 10 4 2.5-4 2.5z" /></>,
   buscar: <><circle cx="11" cy="11" r="7" /><path d="m21 21-5-5" /></>,
   anuncio: <><path d="M3 10v4h4l7 5V5L7 10z" /><path d="M18 8a5 5 0 0 1 0 8" /></>,
   profit: <><rect x="5" y="3" width="14" height="18" rx="2" /><path d="M8 7h8M8 12h2M12 12h2M16 12h0M8 16h2M12 16h2M16 16h0" /></>,
