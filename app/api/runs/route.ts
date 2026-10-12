@@ -9,6 +9,7 @@ import { COST, type Tool } from '@/lib/credits'
 import { createRun, FreeLimit, NoCredits } from '@/lib/runs'
 import { profit, suggestedPrice } from '@/lib/profit'
 import { ASPECTS, LOOKS, MAX_ANGLES, MIN_ANGLES } from '@/lib/product3d'
+import { wantsCutout } from '@/lib/cutout'
 
 const MB = 1024 * 1024
 const LIMITS = { image: 10 * MB, video: 100 * MB } // ponytail: video 100 MB (bytea); el funcional pide 200 MB con R2
@@ -94,11 +95,11 @@ export async function POST(req: Request) {
     const description = String(f.get('description') || '').trim()
     const duration = Number(f.get('duration'))
     const style = String(f.get('style'))
-    if (description.length > 2000 || (['guion', 'foto', 'whatsapp', 'copy'].includes(tool) && !description)) return back('invalid')
+    if (description.length > 2000 || (['guion', 'foto', 'whatsapp', 'copy'].includes(tool) && !description && style !== 'sinfondo')) return back('invalid')
     if (tool === 'guion' && ![15, 30, 60].includes(duration)) return back('invalid')
     const request = String(f.get('request') || '').trim()
-    if (tool === 'foto' && (!['catalogo', 'anuncio', 'libre'].includes(style) || request.length > 500 || (style === 'libre' && !request))) return back('invalid')
-    if (tool === 'foto' && !imageAIReady()) return back('image_config')
+    if (tool === 'foto' && (!['catalogo', 'anuncio', 'libre', 'sinfondo'].includes(style) || request.length > 500 || (style === 'libre' && !request))) return back('invalid')
+    if (tool === 'foto' && !wantsCutout(style, request) && !imageAIReady()) return back('image_config') // el recorte no usa proveedor de IA
     if (tool === 'transcribir' && !process.env.GEMINI_API_KEY) return back('audio_config')
     const objective = String(f.get('objective') ?? 'ventas')
     const platform = String(f.get('platform') ?? 'Multicanal')
