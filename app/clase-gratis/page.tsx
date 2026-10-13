@@ -2,6 +2,7 @@ import '../landing.css'
 import { FreeClassForm } from '@/lib/free-class-form'
 import { Icon } from '@/lib/icons'
 import { TOOL_GROUPS, TOOLS } from '@/lib/meta'
+import { mercadoFonts } from '@/lib/mercado-fonts'
 
 // [ícono, título, frase] de cada paso de la clase.
 const STEPS = [
@@ -19,48 +20,42 @@ export const metadata = {
 
 export default function FreeClass() {
   return (
-    <div className="landing sales-landing">
-      <header className="nav"><div className="wrap">
-        <a className="logo" href="/"><span className="brand-mark" aria-hidden="true">t.</span>Tendy<b>Lab</b></a>
-        <a href="#inscripcion" className="btn" style={{ marginLeft: 'auto' }}>Inscribirme gratis</a>
+    <div className={`landing mercado ${mercadoFonts}`}>
+      <header className="mk-nav"><div className="wrap">
+        <a className="mk-logo" href="/"><span aria-hidden="true">t.</span>TendyLab</a>
+        <a href="#inscripcion" className="mk-ticket sm mk-push">Inscribirme gratis</a>
       </div></header>
 
       <main>
-        <section className="sales-hero course-hero" id="inscripcion">
-          <div className="wrap course-hero-grid">
-            <div className="course-hero-copy">
-              <span className="eyebrow">CLASE GRATIS · EN VIVO</span>
-              <h1><span className="hl">Aprende a vender</span><br /><em className="hl">tu producto con IA.</em></h1>
-              <p>Una clase gratuita para que veas, con ejemplos reales, cómo presentar tu producto, crear contenido y preparar tus anuncios. Déjanos tus datos y te enviamos la fecha y el enlace por WhatsApp.</p>
-              <ul className="hero-checks"><li>Gratis</li><li>Desde cero</li><li>Con tu propio producto</li></ul>
-            </div>
-            <div className="dashboard-tool"><FreeClassForm whatsapp={(process.env.WHATSAPP_NUMBER || '').replace(/\D/g, '')} /></div>
+        <section className="mk-hero" id="inscripcion"><div className="wrap mk-hero-grid">
+          <div className="mk-hero-copy">
+            <span className="mk-stamp">Clase gratis · En vivo</span>
+            <h1>Aprende a vender <em>tu producto con IA.</em></h1>
+            <p>Una clase gratuita para que veas, con ejemplos reales, cómo presentar tu producto, crear contenido y preparar tus anuncios. Déjanos tus datos y te enviamos la fecha y el enlace por WhatsApp.</p>
+            <ul className="mk-checks"><li>Gratis</li><li>Desde cero</li><li>Con tu propio producto</li></ul>
           </div>
-        </section>
+          <div className="mk-formcard"><FreeClassForm whatsapp={(process.env.WHATSAPP_NUMBER || '').replace(/\D/g, '')} /></div>
+        </div></section>
+        <div className="mk-tape" aria-hidden="true"><span>APRENDE → CREA → VENDE → CRECE</span></div>
 
-        <section className="section tint"><div className="wrap">
-          <span className="eyebrow">QUÉ VERÁS EN LA CLASE</span>
-          <h2>La ruta completa, paso a paso.</h2>
-          <ol className="class-steps">{STEPS.map(([icon, title, text], i) => <li key={title}>
-            <div className="class-art"><Icon name={icon} /><span>{String(i + 1).padStart(2, '0')}</span></div>
-            <h3>{title}</h3><p>{text}</p>
-          </li>)}</ol>
+        <section className="mk-sec mk-paper"><div className="wrap">
+          <h2>La ruta completa, <span>paso a paso.</span></h2>
+          <ol className="mk-route">{STEPS.map(([icon, title, text]) => <li key={title}><Icon name={icon} /><h3>{title}</h3><p>{text}</p></li>)}</ol>
         </div></section>
 
-        <section className="section"><div className="wrap">
-          <span className="eyebrow">QUÉ PODRÁS HACER</span>
-          <h2>Herramientas para aplicarlo<br /><em>en tu negocio.</em></h2>
-          <div className="method-grid">
-            {TOOL_GROUPS.map(([title, hint, keys]) => <article key={title}><span>{title.toUpperCase()}</span><h3>{hint}.</h3><p>{keys.map(k => TOOLS[k].title).join(' · ')}</p></article>)}
+        <section className="mk-sec mk-navy"><div className="wrap">
+          <h2>Herramientas para aplicarlo <span>en tu negocio.</span></h2>
+          <div className="mk-signs is-three">
+            {TOOL_GROUPS.map(([title, hint, keys]) => <div className="mk-sign" key={title}><h3>{title}</h3><p>{hint}.</p><ul>{keys.map(k => <li key={k}>{TOOLS[k].title}</li>)}</ul></div>)}
           </div>
         </div></section>
 
-        <section className="cta-band"><div className="wrap">
-          <h2>Tu lugar en la clase es gratis.</h2>
-          <a className="btn lg light" href="#inscripcion">Inscribirme ahora <span aria-hidden="true">↑</span></a>
+        <section className="mk-close"><div className="wrap">
+          <h2>Tu lugar en la clase <em>es gratis.</em></h2>
+          <a className="mk-ticket lg" href="#inscripcion">Inscribirme ahora <span aria-hidden="true">↑</span></a>
         </div></section>
       </main>
-      <footer className="foot"><div className="wrap"><a className="logo" href="/">Tendy<b>Lab</b></a><span>Los ejemplos son ilustrativos. Los resultados dependen de cada negocio y no están garantizados.</span><a href="/">Ver TendyLab ↗</a></div></footer>
+      <footer className="mk-foot"><div className="wrap"><a className="mk-logo" href="/"><span aria-hidden="true">t.</span>TendyLab</a><p>Los ejemplos son ilustrativos. Los resultados dependen de cada negocio y no están garantizados.</p><a href="/">Ver TendyLab →</a></div></footer>
     </div>
   )
 }
