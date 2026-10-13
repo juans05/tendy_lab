@@ -13,6 +13,9 @@ const STEPS = [
   ['whatsapp', 'Vender', 'Atiende por WhatsApp y en vivo hasta cerrar la venta.'],
 ]
 
+// WHATSAPP_NUMBER se lee al servir la página: en el build de Docker la variable no existe y quedaría vacía.
+export const dynamic = 'force-dynamic'
+
 export const metadata = {
   title: 'TendyLab · Clase gratis',
   description: 'Inscríbete gratis a la clase de TendyLab y aprende a vender tu producto en redes con ayuda de la IA.',
