@@ -5,6 +5,8 @@ export const TOOLS = {
   transcribir: { title: 'Video a texto', desc: 'Transcribe un video con tiempos y recibe una versión parafraseada para Mi marca. 10 monedas por el proceso completo.' },
   guion: { title: 'Guion para grabar', desc: 'Sube una foto y cuenta qué vendes. Recibe qué decir y qué grabar para un video de 15, 30 o 60 segundos.' },
   foto: { title: 'Foto lista para vender', desc: 'Cambia o quita el fondo de tu foto, o agrégale lo que pidas, con tu producto como protagonista.' },
+  retrato: { title: 'Retrato y portada', desc: 'Sube de 1 a 3 fotos tuyas y recibe un retrato de marca personal o una portada tipo revista, con tu cara tal cual.' },
+  ficha: { title: 'Ficha visual del producto', desc: 'Una descripción exacta de tu producto (forma, materiales, colores, etiqueta) que se usa en todas tus imágenes para que salga siempre igual.' },
   imagen3d: { title: 'Tu producto en 3D', desc: 'Sube de 2 a 3 fotos desde distintos ángulos y recibe una imagen 3D o un video de 8 segundos girando.' },
   video3d: { title: 'Video 3D de tu producto', desc: 'Un video de 8 segundos de tu producto girando, a partir de 2 a 3 fotos desde distintos ángulos.' },
   video: { title: 'Analiza mi Video', desc: 'MP4/MOV/WebM de hasta 90 s. Score por dimensiones, momentos clave, fallas y mejoras.' },
@@ -18,7 +20,7 @@ export const TOOLS = {
   profit: { title: '¿A cuánto lo vendo?', desc: 'Suma tus gastos, elige cuánto quieres ganar y calcula tu precio de venta.' },
 } as const
 
-// Agrupación por objetivo (panel y landing). foto vive como pestaña de imagen y video3d de imagen3d; cada herramienta en un solo grupo.
+// Agrupación por objetivo (panel y landing). foto y retrato viven como pestañas de imagen y video3d de imagen3d; cada herramienta en un solo grupo.
 export const TOOL_GROUPS: [string, string, (keyof typeof TOOLS)[]][] = [
   ['Crear contenido', 'Imágenes, guiones y textos con tu marca', ['imagen', 'imagen3d', 'guion', 'hooks', 'copy', 'prompt']],
   ['Analizar', 'Mejora lo que ya tienes antes de publicar', ['video', 'creativo', 'transcribir']],
@@ -28,6 +30,7 @@ export const TOOL_GROUPS: [string, string, (keyof typeof TOOLS)[]][] = [
 export const PROMPT_TARGETS: Record<string, [string, string, string, string]> = {
   imagen: ['Crear una imagen', 'ChatGPT, Gemini o Meta AI', '/panel/tools/imagen', 'Crea una imagen'],
   foto: ['Mejorar una foto que ya tengo', 'ChatGPT o Gemini, subiendo tu foto junto al prompt', '/panel/tools/imagen?modo=fondo', 'Editar mi foto'],
+  copiar: ['Copiar el estilo de una imagen que me gusta', 'ChatGPT, Gemini o Meta AI', '/panel/tools/imagen', 'Crea una imagen'],
   landing: ['Una landing page', 'Lovable, v0, Bolt o ChatGPT', '/panel/tools/landing', 'Página de producto'],
   meta: ['Un anuncio para Meta (Facebook e Instagram)', 'ChatGPT o Meta AI, y luego el Administrador de anuncios', '/panel/tools/copy', 'Copy para publicar'],
   video: ['Un video con IA', 'Veo (Gemini), Sora, Kling o Runway', '/panel/tools/imagen3d?modo=video', 'Video 3D de tu producto'],

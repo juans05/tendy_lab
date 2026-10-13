@@ -721,3 +721,12 @@ td { padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: t
 .lp-progress span { flex: 1 1 160px; height: 8px; border-radius: 999px; background: var(--line); overflow: hidden; }
 .lp-progress i { display: block; height: 100%; background: var(--orange); transition: width .2s; }
 textarea.prompt-box { width: 100%; font-family: ui-monospace, Consolas, monospace; font-size: .85rem; }
+.lp-color { width: 100%; height: 48px; padding: 4px; cursor: pointer; }
+.lp-swatch { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; border: 1px dashed var(--line); border-radius: var(--r); padding: 14px 18px; margin: 12px 0; background: var(--cream); }
+.lp-swatch b { font: 700 1.3rem var(--display); }
+.lp-swatch span { border-radius: 12px; padding: 10px 18px; font-weight: 700; }
+.lp-create { margin-top: 8px; }
+/* Página de producto con colores de marca: texto del botón siempre legible */
+.product-page .btn:not(.ghost), .product-page form > button { color: var(--on-primary, var(--ink)); }
+.product-page .btn:not(.ghost):hover, .product-page form > button:hover { filter: brightness(.92); color: var(--on-primary, #fff); }
+.tweak-kinds{display:flex;flex-wrap:wrap;gap:8px 18px;border:0;padding:0;margin:8px 0}.tweak-kinds legend{font-weight:600;margin-bottom:6px}.tweak-kinds .check{white-space:nowrap;gap:6px}

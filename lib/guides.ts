@@ -1,6 +1,6 @@
 // Guías de la Ruta. ponytail: contenido estático en código; mover a BD/CMS si el dueño las edita seguido.
 // Contenido a validar por el dueño antes de publicar; cada guía cita su fuente oficial.
-export type GuideSlug = 'ruc-10' | 'whatsapp-business' | 'landing-page' | 'meta-ads'
+export type GuideSlug = 'ruc-10' | 'whatsapp-business' | 'landing-page' | 'meta-ads' | 'prompts-imagenes'
 export type Guide = { slug: GuideSlug; title: string; icon: string; summary: string; why: string; steps: string[]; mistakes: string[]; sources: [string, string][]; video?: string }
 export const GUIDES: Record<GuideSlug, Guide> = {
   'ruc-10': {
@@ -63,5 +63,21 @@ export const GUIDES: Record<GuideSlug, Guide> = {
     ],
     mistakes: ['Cambiar el anuncio cada día: no dejas que el sistema aprenda.', 'Usar el botón "Promocionar" sin elegir objetivo ni público.', 'No saber cuánto puedes pagar por venta antes de empezar.'],
     sources: [['Meta · Centro de ayuda para empresas', 'https://www.facebook.com/business/help'], ['Meta Blueprint (cursos gratis)', 'https://www.facebook.com/business/learn']],
+  },
+  'prompts-imagenes': {
+    slug: 'prompts-imagenes', title: 'Prompts para imágenes con IA', icon: '🎨',
+    summary: 'Adapta prompts que ya funcionan a tu producto y a tu cara, sin gastar créditos de más.',
+    why: 'Un buen prompt no se inventa desde cero: se toma uno probado de una librería y se adapta. Así tus fotos se ven profesionales y conservan tu producto real.',
+    steps: [
+      'Busca un prompt que te guste en una librería: YouMind (gratis y en español), Meigen AI (galería visual) o PromptBase (de pago, de 2 a 10 dólares por prompt).',
+      'Paso 1 · Adáptalo: pégalo en Mejorar mi prompt. Se conservan cámara, luz y acabado; solo cambian el sujeto y el entorno, y se quitan marcas y nombres del ejemplo.',
+      'Paso 2 · Revísalo antes de generar: sin restos del ejemplo original, sin dos luces o dos formatos a la vez, con la relación de aspecto correcta y sin texto ni marcas de agua.',
+      'Paso 3 · Itera: si el resultado casi está, usa «Cambiar una sola cosa» en el resultado. Un cambio por vuelta, todo lo demás igual.',
+      '¿Encontraste una imagen sin prompt? En Mejorar mi prompt elige «Copiar el estilo de una imagen que me gusta» y súbela.',
+      'Qué uso para qué: foto real del producto → Editar mi foto; ficha de tienda → estilo Catálogo; imagen principal → Anuncio; publicación con contexto → En uso; anuncio con texto encima → Color; carrusel o cabecera → Flat lay; foto de perfil o miniatura → Retrato y portada; plano vertical en movimiento → Video 3D.',
+      'Escribe los prompts de imagen y video en inglés: los modelos responden con más precisión. Mejorar mi prompt te da la traducción para que sepas qué pide.',
+    ],
+    mistakes: ['Cambiar varias cosas a la vez: no sabrás cuál arregló (o rompió) la imagen.', 'Pedir mucho texto dentro de la imagen: con más de 3 o 4 palabras aparecen letras inventadas.', 'Animar una imagen y recortarla después a 9:16: decide el formato vertical antes de animar.', 'Usar adjetivos que no describen nada visible («increíble», «premium»): no cambian la imagen.'],
+    sources: [['Recopilación de prompts del curso (Notion)', 'https://app.notion.com/p/El-secreto-de-los-Prompts-para-Generar-Im-genes-con-IA-3d60714ba62e80818ce7d36d121a3b00'], ['YouMind', 'https://youmind.com/'], ['PromptBase', 'https://promptbase.com/']],
   },
 }

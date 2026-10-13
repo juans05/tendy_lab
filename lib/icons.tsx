@@ -12,6 +12,8 @@ const P: Record<string, React.ReactNode> = {
   landing: <><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 8h18M7 12h6M7 16h4M15 12h2v4h-2z" /></>,
   landingpro: <><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 8h18M7 12h5M7 16h3" /><path d="m17 12 1 2 2 1-2 1-1 2-1-2-2-1 2-1z" /></>,
   producto: <><path d="M3 8l9-5 9 5v8l-9 5-9-5z" /><path d="M3 8l9 5 9-5M12 13v8" /></>,
+  retrato: <><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></>,
+  ficha: <><rect x="4" y="3" width="16" height="18" rx="2" /><path d="M8 8h8M8 12h8M8 16h5" /></>,
   imagen3d: <><path d="M3 8l9-5 9 5v8l-9 5-9-5z" /><path d="M3 8l9 5 9-5M12 13v8" /></>,
   video3d: <><path d="M3 8l9-5 9 5v8l-9 5-9-5z" /><path d="m10 10 4 2.5-4 2.5z" /></>,
   buscar: <><circle cx="11" cy="11" r="7" /><path d="m21 21-5-5" /></>,

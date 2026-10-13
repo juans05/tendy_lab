@@ -22,8 +22,23 @@ export type LandingKey = typeof LANDING_FIELDS[number][0]
 export const AMBIENTES = ['divertido', 'elegante', 'técnico', 'natural', 'premium', 'festivo', 'minimalista', 'juvenil'] as const
 export const TONOS = ['cercano', 'entusiasta', 'profesional', 'inspirador', 'directo'] as const
 
-export function buildLandingPrompt(d: Partial<Record<LandingKey, string>>, ambiente: string, tono: string) {
+export const HEX = /^#[0-9a-f]{6}$/i
+// Colores #hex que el usuario escribió en Mi marca (si los hay).
+export const hexesIn = (s = '') => s.match(/#[0-9a-f]{6}\b/gi) ?? []
+// Texto legible sobre un color: tinta oscura sobre colores claros, blanco sobre oscuros (luminancia WCAG).
+export function readableOn(hex: string) {
+  const [r, g, b] = [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16) / 255).map(c => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4))
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.18 ? '#202020' : '#ffffff'
+}
+
+// Web de referencia: se extraen decisiones de diseño, nunca su marca ni sus textos (evita el look "hecho con IA").
+const referenceBlock = (url: string) => url
+  ? `- Usa ${url} SOLO como referencia de diseño. Antes de diseñar, analízala: estructura, jerarquía visual, navegación, composición de la portada, espacios y márgenes, tipografías y relación de tamaños, paleta, estilo de botones, tratamiento de imágenes, tarjetas, animaciones y comportamiento al hacer scroll. Extrae sus principios y aplícalos a este producto con la paleta de la marca. No copies su branding, textos, imágenes ni contenido.`
+  : '- Si adjunto capturas de una web que me gusta, úsalas solo como referencia de diseño: extrae estructura, tipografías, espacios, botones e interacciones, sin copiar su marca, textos ni imágenes.'
+
+export function buildLandingPrompt(d: Partial<Record<LandingKey, string>>, ambiente: string, tono: string, colors?: { primary: string; accent: string }, referencia = '') {
   const datos = LANDING_FIELDS.map(([k, label]) => `- ${label}: ${d[k]?.trim() || 'PENDIENTE'}`).join('\n')
+    + (colors ? `\n- Colores exactos de la marca: principal ${colors.primary}, acento ${colors.accent}. Úsalos como base de la paleta (botones, títulos y detalles) con buen contraste.` : '')
   return `Actúa como un equipo formado por un estratega de marketing, un copywriter de ventas y un diseñador web senior. Con las fotos y videos que adjunto, crea una landing page única, persuasiva y basada en investigación real. No uses una plantilla genérica.
 
 === 1. DATOS DEL PRODUCTO (lo marcado como PENDIENTE debe aparecer así en la página) ===
@@ -47,9 +62,10 @@ ${datos}
 - Al final, entrégame un resumen corto de lo que encontraste y cómo lo aplicaste. No copies textos ni diseños de otros sitios.
 
 === 4. CONCEPTO Y DISEÑO NO GENÉRICO ===
+${referenceBlock(referencia.trim())}
 - Define un concepto creativo propio (una idea central o historia) y aplícalo en toda la página.
 - Evita plantillas típicas: nada de bloques idénticos repetidos, íconos de relleno ni frases vacías como "la mejor calidad" o "innovador".
-- Saca la paleta de colores del propio producto y de la marca; usa tipografías con personalidad y que se lean bien.
+- Saca la paleta de colores de la marca (si hay colores exactos, respétalos) y compleméntala con los del propio producto; usa tipografías con personalidad y que se lean bien.
 - Si el tamaño importa, muéstralo con una comparación visual a escala frente a objetos conocidos (una puerta, una mesa, una mano, un celular) o con una regla. Traduce las medidas a algo cotidiano (por ejemplo, "del tamaño de un niño de 6 años").
 - Incluye al menos un elemento interactivo relacionado con el producto (visor 360°, comparador, antes/después, selector de colores o tamaños).
 - Ambiente: ${ambiente}
@@ -78,6 +94,7 @@ ${datos}
 === 7. VENTA Y CONFIANZA ===
 - Botón de compra visible en las secciones clave y botón flotante de WhatsApp (u otro canal).
 - Mensaje de WhatsApp ya escrito con el nombre del producto.
+- Si hay formulario, debe enviar de verdad (por ejemplo con Formspree o abriendo WhatsApp con los datos ya escritos): valida los campos, muestra un mensaje de éxito o de error y nunca dejes un formulario decorativo que no envía nada.
 - El número de WhatsApp y el mensaje deben poder cambiarse en una sola línea al inicio del código.
 - Sellos de confianza (envío, pago seguro, garantía, devoluciones) solo si aplican.
 - Propón 2 títulos alternativos para probar cuál vende más.
@@ -88,11 +105,16 @@ ${datos}
 - SEO: título, meta descripción, encabezados en orden, textos alternativos en las imágenes, datos estructurados de producto y etiquetas para compartir en redes (Open Graph).
 - Accesible (buen contraste, navegable con teclado) y compatible con modo claro y oscuro.
 - Código ordenado y comentado para editarlo fácilmente.
+- Cookies: si usas analítica, píxel de Meta u otras cookies no esenciales, agrega un aviso de consentimiento que bloquee esos scripts hasta que la persona acepte, con opción de rechazar. Si no usas ninguna, no pongas banner.
+- Agrega en el pie un enlace a la política de privacidad (déjala como PENDIENTE si no la tengo), acorde a la ley de protección de datos del país de venta.
 
 === 9. QUÉ DEBES ENTREGAR ===
 1. La landing page lista para ver y compartir.
 2. Resumen de la investigación (3–5 puntos) y el concepto creativo en 2–3 líneas.
 3. Lista de datos PENDIENTES.
 4. Diferencias encontradas entre los datos escritos y lo que se ve en las fotos o el video.
-5. Los 2 títulos alternativos y recomendaciones de fotos o mejoras.`
+5. Los 2 títulos alternativos y recomendaciones de fotos o mejoras.
+
+=== 10. REVISIÓN FINAL ANTES DE ENTREGAR ===
+Comprueba y confírmame cada punto: título y meta descripción únicos; imagen para compartir (Open Graph) y favicon; el formulario envía y muestra confirmación; el botón de WhatsApp abre con el mensaje escrito; se ve bien en un celular pequeño; no hay enlaces rotos ni textos de ejemplo; los datos PENDIENTES están visibles; las imágenes cargan rápido.`
 }

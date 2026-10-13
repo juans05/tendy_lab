@@ -10,6 +10,8 @@ export default async function Dashboard() {
   const name = user.brand.name || user.email.split('@')[0]
   const benefits: Record<keyof typeof TOOLS, [string, string]> = { // tipado por herramienta: si falta una, no compila
     imagen: ['Tu idea, con un diseño que habla como tu marca.', '7 pasos · Imagen · Prompt para copiar'],
+    retrato: ['Tu foto de perfil o portada, sin perder tu cara.', '1 a 3 fotos · Perfil · Portada'],
+    ficha: ['Tu producto, igual en todas tus imágenes.', '1 foto · Ficha para todas tus imágenes'],
     imagen3d: ['Tu producto con volumen, listo para destacar.', '2 a 3 fotos · Imagen 3D · Video de 8 s'],
     video3d: ['Tu producto girando en un video corto.', '2 a 3 fotos · Video de 8 s'],
     transcribir: ['Convierte lo que escuchas en ideas para tu marca.', 'Video · Texto con tiempos · Parafrasear'],

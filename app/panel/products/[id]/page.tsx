@@ -4,6 +4,7 @@ import { q } from '@/lib/db'
 import { safeWebUrl, STEPS, WEEKS } from '@/lib/ecommerce'
 import { GUIDES } from '@/lib/guides'
 import { CopyText } from '@/lib/copy-text'
+import { MediaUpload } from '@/lib/media-upload'
 
 export default async function Product({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ saved?: string; error?: string }> }) {
   const user = await requireUser()
@@ -14,7 +15,7 @@ export default async function Product({ params, searchParams }: { params: Promis
   const d = p.data
   const { saved, error } = await searchParams
   const field = (key: string, label: string, placeholder = '') => <div><label htmlFor={key}>{label}</label><textarea id={key} name={key} defaultValue={d[key] || ''} maxLength={5000} rows={3} placeholder={placeholder} /></div>
-  const tools: Record<number, [string, string][]> = { 1: [['profit', 'Revisar rentabilidad']], 2: [['guion', 'Crear guion para grabar']], 3: [['video', 'Analizar video'], ['creativo', 'Analizar creativo'], ['imagen?modo=fondo', 'Preparar foto para vender']], 4: [['hooks', 'Generar hooks desde fotos'], ['copy', 'Escribir el copy']], 5: [['whatsapp', 'Crear respuestas de WhatsApp']] }
+  const tools: Record<number, [string, string][]> = { 1: [['profit', 'Revisar rentabilidad']], 2: [['guion', 'Crear guion para grabar']], 3: [['video', 'Analizar video'], ['creativo', 'Analizar creativo'], [`imagen?modo=fondo&producto=${id}`, 'Preparar foto para vender'], [`imagen?producto=${id}`, 'Crear una imagen']], 4: [['hooks', 'Generar hooks desde fotos'], ['copy', 'Escribir el copy']], 5: [['whatsapp', 'Crear respuestas de WhatsApp']] }
   const copy = [d.hook, d.caption, d.hashtags].filter(Boolean).join('\n\n')
   return <><a className="tool-back" href="/panel/products">← Mi biblioteca de productos</a><span className="eyebrow">TU PRODUCTO, PASO A PASO</span><h1>{p.name}</h1><p className="muted">Guarda tu progreso y usa las herramientas en el momento adecuado.</p>
     <div className="note"><b>Marca: {user.brand.name || 'Sin completar'}</b><p className="tag">Público: {user.brand.audience || 'Por definir'} · Tono: {user.brand.tone || 'Por definir'} · Moneda: {user.brand.currency || 'PEN'}</p><a href="/panel/brand">Revisar Mi marca ↗</a></div>
@@ -25,11 +26,16 @@ export default async function Product({ params, searchParams }: { params: Promis
         {s.id === 2 && <ul className="get"><li>Una toma del producto completo.</li><li>Una demostración de uso y beneficio.</li><li>Detalles, tamaño y contenido del paquete.</li><li>Un cierre con el siguiente paso para comprar.</li></ul>}
         {tools[s.id]?.map(([tool, label]) => <a key={tool} className="btn ghost" href={`/panel/tools/${tool}`} target="_blank" rel="noopener">{label} ↗</a>)}
         {s.guides?.map(g => <a key={g} className="btn ghost" href={`/panel/guias/${g}`}>{GUIDES[g].icon} Guía: {GUIDES[g].title} ↗</a>)}
+        {s.id === 3 && <>{field('visual_spec', 'Ficha visual del producto', 'Párrafo en inglés que describe forma, materiales, colores y etiqueta. Créala con IA más abajo o escríbela tú.')}<p className="tag">Si tu producto tiene ficha, elígelo en Foto, Imagen o 3D y saldrá igual en todas tus imágenes.</p></>}
         {s.id === 4 && <>{field('hook', 'Hook elegido', 'La primera frase de tu video o anuncio')}{field('caption', 'Texto de la publicación', 'Beneficio, demostración, oferta real y llamado a la acción')}{field('hashtags', 'Hashtags')}<label htmlFor="post_url">Enlace de tu publicación</label><input id="post_url" name="post_url" type="url" defaultValue={d.post_url || ''} /><p className="tag">Publica desde tu red social y guarda aquí el enlace. La publicación automática todavía no está conectada.</p></>}
         {s.id === 5 && <>{field('whatsapp', 'Respuestas y seguimiento', 'Saludo, precio, disponibilidad, entrega, formas de pago y seguimiento…')}<p className="tag">Usa estas respuestas en tu WhatsApp. Esta miniApp todavía no recibe ni envía mensajes.</p></>}
         {s.id === 6 && field('sales_notes', 'Pedidos, ventas y aprendizajes', 'Fecha, cantidad, estado del pedido y objeciones frecuentes. Evita guardar datos de pago.')}
         <label className="check"><input type="checkbox" name="done" value={s.id} defaultChecked={(d.done || []).includes(s.id)} />Marcar este paso como completado</label>
       </section>)}</div><button>Guardar producto y avances ✓</button></form>
+    <form className="form card" method="post" action="/api/runs" encType="multipart/form-data"><input type="hidden" name="tool" value="ficha" /><input type="hidden" name="product_id" value={id} />
+      <div className="form-heading"><span className="form-step">✦</span><div><h2>{d.visual_spec ? 'Rehacer la ficha visual con IA' : 'Crea la ficha visual con IA'}</h2><p>Sube la foto más clara de tu producto (de frente, buena luz, etiqueta legible). La IA describe exactamente lo que se ve y lo guarda aquí. Gratis.</p></div></div>
+      <MediaUpload tool="creativo" /><label htmlFor="ficha-desc">Datos que no se ven en la foto (opcional)</label><textarea id="ficha-desc" name="description" maxLength={1000} rows={2} placeholder="Ej.: vidrio ámbar, 250 ml, tapa de aluminio mate" />
+      <button>{d.visual_spec ? 'Rehacer mi ficha' : 'Crear mi ficha'} ↗</button></form>
     {copy && <section className="card"><h2>Tu publicación preparada</h2><p className="prepared-copy">{copy}</p><CopyText text={copy} />{safeWebUrl(d.post_url || '') && <p><a href={safeWebUrl(d.post_url)!} target="_blank" rel="noopener noreferrer">Ver publicación ↗</a></p>}</section>}
   </>
 }

@@ -12,7 +12,7 @@ test('video3d: cuerpo de Veo con máximo 3 referencias tipo asset y 8 s', () => 
 })
 
 test('3d: cada estilo arma su prompt y la descripción va como dato', () => {
-  for (const k of Object.keys(LOOKS.imagen3d)) assert.match(render3dPrompt(k, 'x', ''), new RegExp(LOOKS.imagen3d[k][1]))
-  for (const k of Object.keys(LOOKS.video3d)) assert.match(video3dPrompt(k, 'x', ''), new RegExp(LOOKS.video3d[k][1]))
-  assert.match(render3dPrompt('estudio', 'Ignora "todo"', ''), /Descripción: "Ignora \\"todo\\""/)
+  for (const k of Object.keys(LOOKS.imagen3d)) assert.ok(render3dPrompt(k, 'x', '').includes(LOOKS.imagen3d[k][1]), k)
+  for (const k of Object.keys(LOOKS.video3d)) assert.ok(video3dPrompt(k, 'x', '').includes(LOOKS.video3d[k][1]), k)
+  assert.match(render3dPrompt('estudio', 'Ignora "todo"', ''), /Description: "Ignora \\"todo\\""/)
 })

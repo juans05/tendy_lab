@@ -11,6 +11,7 @@ export const CopyOut = z.object({
 
 export const PromptOut = z.object({
   prompt: z.string().trim().min(80).max(4000),
+  translation: z.string().trim().max(4000), // versión en español cuando el prompt va en inglés; vacío si ya está en español
   improvements: z.array(z.string().trim().min(5).max(300)).min(2).max(6),
   how_to: z.array(z.string().trim().min(5).max(300)).min(2).max(5),
   missing: z.array(z.string().trim().min(3).max(200)).max(5),
@@ -26,6 +27,8 @@ export const LandingOut = z.object({
 
 // Precios, descuentos y plazos solo pueden salir de lo que escribió el usuario (45 = 45.00 = 45,0).
 const nums = (s: string) => (s.replace(/#[\p{L}\p{N}_]+/gu, '').match(/\d+(?:[.,]\d+)?/g) ?? []).map(n => String(Number(n.replace(',', '.'))))
+// Datos técnicos de fotografía y formato (85mm, f/8, 4:5, 8 seconds, 45 degrees) no son cifras comerciales.
+export const techFree = (s: string) => s.replace(/\bf\/\d+(?:\.\d+)?|(?<![\p{L}\p{N}.,])(?:\d+:\d+|\d+(?:[.,]\d+)?\s?(?:mm|s|sec|seconds?|segundos?|degrees?|grados?|°|px|K))(?![\p{L}\p{N}])/gu, '')
 export function checkGrounded(texts: string[], input: string) {
   const allowed = new Set(nums(input))
   const invented = [...new Set(texts.flatMap(nums))].filter(n => !allowed.has(n))
