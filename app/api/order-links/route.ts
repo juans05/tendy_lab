@@ -20,7 +20,7 @@ export async function POST(req: Request) {
     }).safeParse({ headline: f.get('headline'), subheadline: f.get('subheadline'), cta: f.get('cta'), whatsapp,
       benefits: pairs(f.get('benefits')).map(([title, text]) => ({ title, text })), faqs: pairs(f.get('faqs')).map(([q, a]) => ({ q, a })) })
     if (!page.success) return back(false)
-    await q('update order_links set page=$3 where token=$1 and user_id=$2 and page is not null', [token, user.id, page.data])
+    await q('update order_links set page=page || $3 where token=$1 and user_id=$2 and page is not null', [token, user.id, page.data])
     return back(true)
   }
   if (token) {

@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { q } from '@/lib/db'
 import { money } from '@/lib/meta'
 import { OrderBrand } from '@/lib/order-brand'
+import { HEX, readableOn } from '@/lib/landing-prompt'
 export const dynamic = 'force-dynamic'
 // photos (bytea) no se lee aquí: solo cuántas hay; cada foto se sirve por /api/order-links/[token]/photo/[i].
 const load = (token: string) => q('select l.token,l.product_name,l.price,l.currency,l.active,l.page,coalesce(array_length(l.photos,1),0) as n_photos,u.brand,exists(select 1 from brand_logos b where b.user_id=l.user_id) as has_logo from order_links l join users u on u.id=l.user_id where l.token=$1', [token])
@@ -24,7 +25,12 @@ export default async function Order({ params, searchParams }: { params: Promise<
   const form = <section className="form" id="pedir"><span className="eyebrow">TU PEDIDO, EN UN PASO</span><h1>{p ? 'Haz tu pedido' : link.product_name}</h1><p className="order-price">{price} <small>por unidad</small></p>
     {confirmed ? <div className="ok"><h2>¡Recibimos tu pedido!</h2><p>{link.brand.name} te contactará para confirmar disponibilidad, entrega y pago.</p></div> : !link.active ? <p className="note">Este enlace ya no recibe pedidos.</p> : <><p>Completa tus datos para solicitar tu pedido. No necesitas crear una cuenta.</p>{e && <p className="err">{e === 'invalid' ? 'Revisa tu nombre, teléfono, dirección y cantidad.' : 'No pudimos recibir el pedido. Inténtalo en un minuto.'}</p>}<form method="post" action="/api/orders"><input type="hidden" name="token" value={token} /><div className="sr-only" aria-hidden="true"><input name="website" tabIndex={-1} autoComplete="off" /></div><label htmlFor="customer_name">Tu nombre</label><input id="customer_name" name="customer_name" autoComplete="name" required minLength={2} maxLength={120} /><label htmlFor="phone">WhatsApp o teléfono</label><input id="phone" name="phone" type="tel" autoComplete="tel" required minLength={7} maxLength={25} /><label htmlFor="address">Dirección o zona de entrega</label><textarea id="address" name="address" autoComplete="street-address" required minLength={5} maxLength={500} rows={3} /><label htmlFor="quantity">¿Cuántas unidades quieres?</label><input id="quantity" name="quantity" type="number" min="1" max="100" defaultValue="1" required /><p className="tag">El envío se coordina por separado. Tus datos serán usados por {link.brand.name} para gestionar este pedido.</p><button>Solicitar mi pedido ↗</button></form></>}
   </section>
-  return <main className={p ? 'public-order product-page' : 'public-order'}><OrderBrand name={link.brand.name} src={link.has_logo ? `/api/order-links/${token}/logo` : undefined} />
+  // Colores de marca elegidos en la MiniApp (validados como #rrggbb al guardarse).
+  const theme: any = p && {
+    ...(HEX.test(p.color_primary ?? '') && { '--orange': p.color_primary, '--orange-dark': p.color_primary, '--on-primary': readableOn(p.color_primary) }),
+    ...(HEX.test(p.color_accent ?? '') && readableOn(p.color_accent) === '#ffffff' && { '--navy': p.color_accent }), // acento claro no se lee sobre crema: queda el azul de Tendy
+  }
+  return <main className={p ? 'public-order product-page' : 'public-order'} style={theme}><OrderBrand name={link.brand.name} src={link.has_logo ? `/api/order-links/${token}/logo` : undefined} />
     {p && !confirmed && <>
       <section className="pp-hero">
         {photos[0] && <img className="pp-main" src={photos[0]} alt={link.product_name} />}
