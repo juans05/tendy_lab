@@ -79,6 +79,8 @@ create table if not exists customer_orders(
   created_at timestamptz not null default now());
 alter table order_links add column if not exists page jsonb;
 alter table order_links add column if not exists photos bytea[];
+alter table order_links add column if not exists video bytea;
+alter table order_links add column if not exists video_mime text;
 create table if not exists content_plans(
   id bigserial primary key, user_id bigint not null references users on delete cascade,
   product_id bigint references products on delete set null, name text not null default 'Mi semana',

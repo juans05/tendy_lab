@@ -155,9 +155,11 @@ export async function POST(req: Request) {
       const description = String(f.get('description') || '').trim(), priceText = String(f.get('price') || '').trim()
       const price = Number(priceText), whatsapp = String(f.get('whatsapp') || '').replace(/\D/g, '')
       if (!description || description.length > 2000 || !(price > 0 && price <= 1e6) || (whatsapp && (whatsapp.length < 8 || whatsapp.length > 15))) return back('invalid')
-      const ids = await saveUploads(user.id, files, false, 5)
+      const v = f.get('video'), video = v instanceof File && v.size > 0 ? await saveUploads(user.id, [v], true, 1) : []
+      if (typeof video === 'string') return back(video)
+      const ids = await saveUploads(user.id, files, false, 5, video.length ? 0 : 1)
       if (typeof ids === 'string') return back(ids)
-      return go(`/panel/runs/${await createRun(user.id, tool, { description, price: Math.round(price * 100), price_text: priceText, currency: user.brand.currency, whatsapp, colors: hexColors(f), brand: user.brand, assets: ids })}`)
+      return go(`/panel/runs/${await createRun(user.id, tool, { description, price: Math.round(price * 100), price_text: priceText, currency: user.brand.currency, whatsapp, colors: hexColors(f), brand: user.brand, assets: ids, video: video[0] })}`)
     }
     const description = String(f.get('description') || '').trim()
     const duration = Number(f.get('duration'))

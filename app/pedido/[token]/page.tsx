@@ -5,7 +5,7 @@ import { OrderBrand } from '@/lib/order-brand'
 import { HEX, readableOn } from '@/lib/landing-prompt'
 export const dynamic = 'force-dynamic'
 // photos (bytea) no se lee aquí: solo cuántas hay; cada foto se sirve por /api/order-links/[token]/photo/[i].
-const load = (token: string) => q('select l.token,l.product_name,l.price,l.currency,l.active,l.page,coalesce(array_length(l.photos,1),0) as n_photos,u.brand,exists(select 1 from brand_logos b where b.user_id=l.user_id) as has_logo from order_links l join users u on u.id=l.user_id where l.token=$1', [token])
+const load = (token: string) => q('select l.token,l.product_name,l.price,l.currency,l.active,l.page,coalesce(array_length(l.photos,1),0) as n_photos,l.video is not null as has_video,u.brand,exists(select 1 from brand_logos b where b.user_id=l.user_id) as has_logo from order_links l join users u on u.id=l.user_id where l.token=$1', [token])
 export async function generateMetadata({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params
   const [link] = /^[a-f0-9]{48}$/.test(token) ? await load(token) : []
@@ -33,11 +33,12 @@ export default async function Order({ params, searchParams }: { params: Promise<
   return <main className={p ? 'public-order product-page' : 'public-order'} style={theme}><OrderBrand name={link.brand.name} src={link.has_logo ? `/api/order-links/${token}/logo` : undefined} />
     {p && !confirmed && <>
       <section className="pp-hero">
-        {photos[0] && <img className="pp-main" src={photos[0]} alt={link.product_name} />}
+        {photos[0] ? <img className="pp-main" src={photos[0]} alt={link.product_name} /> : link.has_video && <video className="pp-main" src={`/api/order-links/${token}/video`} controls muted loop playsInline autoPlay />}
         <span className="eyebrow">{link.product_name}</span><h1>{p.headline}</h1><p className="pp-sub">{p.subheadline}</p>
         <p className="order-price">{price}</p>
         <div className="pp-actions"><a className="btn lg" href="#pedir">{p.cta} ↓</a>{wa && <a className="btn lg ghost pp-wa" href={wa} target="_blank" rel="noopener">💬 Escríbenos por WhatsApp</a>}</div>
       </section>
+      {photos[0] && link.has_video && <video className="pp-main" src={`/api/order-links/${token}/video`} controls muted loop playsInline preload="metadata" />}
       {photos.length > 1 && <div className="pp-gallery">{photos.slice(1).map((src, i) => <img key={src} src={src} alt={`${link.product_name}, foto ${i + 2}`} loading="lazy" />)}</div>}
       <section className="pp-benefits"><h2>¿Por qué te va a encantar?</h2>{p.benefits.map((b: any, i: number) => <article key={i}><span aria-hidden="true">✦</span><div><h3>{b.title}</h3><p>{b.text}</p></div></article>)}</section>
       {p.faqs.length > 0 && <section className="pp-faqs"><h2>Preguntas frecuentes</h2>{p.faqs.map((f: any, i: number) => <details key={i}><summary>{f.q}</summary><p>{f.a}</p></details>)}</section>}
