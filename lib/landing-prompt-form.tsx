@@ -15,6 +15,7 @@ export function LandingPromptForm({ brand, cost }: { brand: Record<string, strin
   // Logo: se guarda en Mi marca (lo usa la página que crea Tendy) y para el prompt se adjunta como imagen.
   const [logo, setLogo] = useState('/api/brand/logo')
   const [logoMsg, setLogoMsg] = useState('')
+  const [price, setPrice] = useState('') // un solo precio: va al prompt y a la página de Tendy
   const [video, setVideo] = useState('') // vista previa local del video del producto
   const [videoMsg, setVideoMsg] = useState('')
   async function uploadLogo(file?: File) {
@@ -35,6 +36,7 @@ export function LandingPromptForm({ brand, cost }: { brand: Record<string, strin
   // Las casillas se convierten en texto para el prompt y la descripción.
   const d = {
     ...form,
+    precio: [price && `${brand.currency || ''} ${price}`.trim(), form.precio?.trim()].filter(Boolean).join(' · '),
     canal: pick('canal').join(', '),
     envios: [pick('envios').length ? `Pagos: ${pick('envios').join(', ')}` : '', form.envios?.trim()].filter(Boolean).join(' · '),
     redes: pick('redes').map(r => `${r}: ${urls[r]?.trim() || 'PENDIENTE'}`).join(', '),
@@ -43,10 +45,9 @@ export function LandingPromptForm({ brand, cost }: { brand: Record<string, strin
   const referencia = refs.map(r => r.trim()).filter(Boolean).join(', ')
   const [ambiente, setAmbiente] = useState<string>('elegante')
   const [tono, setTono] = useState<string>(TONOS.find(t => brand.tone?.toLowerCase().includes(t)) || 'cercano')
-  // El prompt solo se arma al pulsar "Generar"; si luego cambian datos, se avisa para regenerarlo.
-  const current = buildLandingPrompt(d, ambiente, tono, { primary, accent }, referencia)
-  const [prompt, setPrompt] = useState('')
-  const stale = prompt && prompt !== current
+  // El prompt aparece al pulsar "Generar" y desde ahí se mantiene al día con lo que se escriba (nunca se copia uno viejo).
+  const [shown, setShown] = useState(false)
+  const prompt = shown ? buildLandingPrompt(d, ambiente, tono, { primary, accent }, referencia) : ''
   const filled = LANDING_FIELDS.filter(([k]) => d[k]?.trim()).length
   // Para crearla en Tendy: los datos llenos viajan como descripción del producto.
   const description = LANDING_FIELDS.filter(([k]) => d[k]?.trim() && k !== 'whatsapp').map(([k, label]) => `${label}: ${d[k]!.trim()}`).join('\n').slice(0, 2000)
@@ -77,7 +78,9 @@ export function LandingPromptForm({ brand, cost }: { brand: Record<string, strin
         {field('publico')}{field('pais')}{field('temporada')}
       </>)}
       {group('4. Precio y venta', 'Cómo te compran, cómo te pagan y cómo llega el pedido.', <>
-        {field('precio')}{field('whatsapp')}
+        <div><label htmlFor="lp-price">Precio por unidad ({brand.currency || 'moneda de Mi marca'})</label><input id="lp-price" name="price" form="lp-create" type="number" inputMode="decimal" step="0.01" min="0.01" max="1000000" required placeholder="Ej.: 89" value={price} onChange={e => setPrice(e.target.value)} /></div>
+        {field('whatsapp')}
+        <div className="lp-full">{field('precio', 'Promociones (opcional)')}</div>
         {chips('canal', 'Canal de venta')}
         {chips('envios', 'Formas de pago')}
         <div className="lp-full">{field('envios', 'Envíos y garantía')}</div>
@@ -121,20 +124,19 @@ export function LandingPromptForm({ brand, cost }: { brand: Record<string, strin
       </section>
 
       {step('03', 'Opción A · Tu prompt para Claude o ChatGPT', 'Cuando termines, genera el prompt. Cópialo, pégalo junto a tus fotos y videos, y la IA crea la landing completa.')}
-      <button type="button" className="btn lg" onClick={() => setPrompt(current)} disabled={!d.producto?.trim()}>{prompt ? '↻ Volver a generar' : '✨ Generar mi prompt'}</button>
+      {!shown && <button type="button" className="btn lg" onClick={() => setShown(true)} disabled={!d.producto?.trim()}>✨ Generar mi prompt</button>}
       {!d.producto?.trim() && <p className="tag">Escribe al menos el nombre del producto.</p>}
-      {stale && <p className="tag" role="status">Cambiaste datos después de generar. Pulsa «Volver a generar» para incluirlos.</p>}
       {prompt && <>
+        <p className="tag">Si cambias algún dato arriba, el prompt se actualiza solo.</p>
         <textarea className="prompt-box" readOnly rows={12} value={prompt} aria-label="Prompt generado" />
         <CopyText text={prompt} />
       </>}
       <div className="note"><b>🧭 Cómo usarlo</b><ol><li>Copia el prompt.</li><li>Ábrelo en <b>Claude</b> o <b>ChatGPT</b> (con búsqueda web activada), o en <b>Lovable</b> / <b>v0</b> si quieres publicarla directo.</li><li>Adjunta tus fotos y videos del producto en el mismo mensaje.</li><li>Revisa la lista de PENDIENTES que te devuelva y completa esos datos.</li></ol></div>
 
-      {step('04', 'Opción B · Créala aquí en Tendy', 'Usamos los datos, colores, logo y fotos de arriba. Pon el precio y la publicamos con formulario de pedido y WhatsApp.')}
+      {step('04', 'Opción B · Créala aquí en Tendy', 'Usamos los datos, colores, logo y fotos de arriba. La publicamos con formulario de pedido y WhatsApp.')}
       <form id="lp-create" method="post" action="/api/runs" encType="multipart/form-data" className="lp-create">
         <input type="hidden" name="tool" value="landing" /><input type="hidden" name="description" value={description} />
         <input type="hidden" name="whatsapp" value={d.whatsapp ?? ''} /><input type="hidden" name="color_primary" value={primary} /><input type="hidden" name="color_accent" value={accent} />
-        <label htmlFor="lp-price">Precio por unidad ({brand.currency || 'moneda de Mi marca'})</label><input id="lp-price" name="price" type="number" step="0.01" min="0.01" max="1000000" required />
         {!d.producto?.trim() && <p className="tag">Escribe al menos el nombre del producto en el paso 01.</p>}
         {(!brand.name || !brand.currency) && <p className="err">Antes completa el nombre y la moneda en <a href="/panel/brand">Mi marca</a>.</p>}
         <p className="note">Costo: <b>{cost}</b>. Si falla, se devuelve automáticamente.</p>

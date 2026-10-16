@@ -11,7 +11,7 @@ export const LANDING_FIELDS = [
   ['publico', '¿Quién lo compra? (público)', ''],
   ['pais', 'País o ciudad donde se vende', ''],
   ['temporada', 'Temporada o fecha clave', 'Ej.: Día de la Madre, Navidad'],
-  ['precio', 'Precio y promociones', 'Ej.: S/ 89, 2 por S/ 160'],
+  ['precio', 'Precio y promociones', 'Ej.: 2 por S/ 160, envío gratis desde 2 unidades'],
   ['canal', 'Canal de venta', 'Ej.: WhatsApp y formulario'],
   ['whatsapp', 'Número de WhatsApp / enlace de compra', 'Ej.: +51 987 654 321'],
   ['envios', 'Envíos, formas de pago y garantía', 'Envíos y garantía, ej.: Lima 24 h, 3 meses de garantía'],
@@ -47,7 +47,8 @@ export function buildLandingPrompt(d: Partial<Record<LandingKey, string>>, ambie
     + (colors ? `\n- Colores exactos de la marca: principal ${colors.primary}, acento ${colors.accent}. Úsalos como base de la paleta (botones, títulos y detalles) con buen contraste.` : '')
   return `Actúa como un equipo formado por un estratega de marketing, un copywriter de ventas y un diseñador web senior. Con las fotos y videos que adjunto, crea una landing page única, persuasiva y basada en investigación real. No uses una plantilla genérica.
 
-=== 1. DATOS DEL PRODUCTO (lo marcado como PENDIENTE debe aparecer así en la página) ===
+=== 1. DATOS DEL PRODUCTO ===
+Estos datos son reales y ya están confirmados: úsalos tal cual en la página (precio, WhatsApp, formas de pago, envíos, redes, colores). Solo lo marcado como PENDIENTE falta; no marques como pendiente nada que tenga valor aquí.
 ${datos}
 
 === 2. ANALIZA PRIMERO EL MATERIAL ADJUNTO ===
