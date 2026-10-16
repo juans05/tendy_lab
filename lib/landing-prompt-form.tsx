@@ -15,6 +15,8 @@ export function LandingPromptForm({ brand, cost }: { brand: Record<string, strin
   // Logo: se guarda en Mi marca (lo usa la página que crea Tendy) y para el prompt se adjunta como imagen.
   const [logo, setLogo] = useState('/api/brand/logo')
   const [logoMsg, setLogoMsg] = useState('')
+  const [video, setVideo] = useState('') // vista previa local del video del producto
+  const [videoMsg, setVideoMsg] = useState('')
   async function uploadLogo(file?: File) {
     if (!file) return
     if (file.size > 2 * 1024 * 1024) return setLogoMsg('El logo debe pesar como máximo 2 MB.')
@@ -91,7 +93,20 @@ export function LandingPromptForm({ brand, cost }: { brand: Record<string, strin
             <p className="tag" role="status">{logoMsg || 'JPG, PNG o WEBP · Hasta 2 MB. Se guarda en Mi marca.'}</p></div>
         </div>
       </>)}
-      {group('6. Fotos del producto a promocionar', 'Sube las fotos que irán en tu página. Para la opción A, adjúntalas también al pegar el prompt.', <div className="lp-full"><MediaUpload tool="hooks" form="lp-create" /></div>)}
+      {group('6. Fotos o video del producto', 'Sube fotos, un video o ambos: irán en tu página. Para la opción A, adjúntalos también al pegar el prompt.', <>
+        <div className="lp-full"><MediaUpload tool="hooks" form="lp-create" required={!video} /></div>
+        <div className="lp-full lp-video"><label htmlFor="lp-video">Video del producto <small>(opcional · MP4, MOV o WebM · hasta 90 s y 100 MB)</small></label>
+          <input id="lp-video" name="video" form="lp-create" type="file" accept="video/mp4,video/quicktime,video/webm" onChange={e => {
+            const file = e.target.files?.[0]
+            const bad = file && file.size > 100 * 1024 * 1024 ? 'El video debe pesar como máximo 100 MB.' : ''
+            e.target.setCustomValidity(bad); setVideoMsg(bad)
+            if (video) URL.revokeObjectURL(video)
+            setVideo(file && !bad ? URL.createObjectURL(file) : '')
+          }} />
+          {videoMsg && <p className="err" role="status">{videoMsg}</p>}
+          {video && <video src={video} controls muted playsInline preload="metadata" onLoadedMetadata={e => { const long = e.currentTarget.duration > 90; const input = document.getElementById('lp-video') as HTMLInputElement; input.setCustomValidity(long ? 'El video debe durar hasta 90 segundos.' : ''); setVideoMsg(long ? 'Tu video dura más de 90 segundos. Recórtalo antes de enviarlo.' : '') }} />}
+        </div>
+      </>)}
 
       {step('02', 'El estilo de tu página', 'Elige el ambiente y el tono de los textos.')}
       <div className="row">

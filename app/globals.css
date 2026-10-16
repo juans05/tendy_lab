@@ -733,6 +733,8 @@ td { padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: t
 .lp-logo > img, .lp-logo > span { width: 120px; height: 72px; object-fit: contain; border: 1px dashed var(--line); border-radius: 10px; background: var(--cream); display: grid; place-items: center; font-size: .8rem; color: var(--muted); }
 .lp-logo > div { flex: 1 1 220px; }
 .lp-logo label { margin-top: 0; }
+.lp-video label small { font-weight: 500; color: var(--muted); }
+.lp-video video { display: block; width: 100%; max-height: 360px; margin-top: 10px; border-radius: 12px; background: #000; }
 .lp-progress { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: .9rem; color: var(--muted); margin-bottom: 8px; }
 .lp-progress b { color: var(--navy); }
 .lp-progress span { flex: 1 1 160px; height: 8px; border-radius: 999px; background: var(--line); overflow: hidden; }
