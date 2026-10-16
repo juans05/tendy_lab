@@ -1,6 +1,7 @@
 import { COST } from './credits'
 
 export const TOOLS = {
+  semana: { title: 'Mi semana de contenido', desc: 'Sube fotos de tu producto, elige cuántos días publicas y recibe qué publicar cada día. 5 monedas por semana.' },
   imagen: { title: 'Crea una imagen', desc: 'Convierte tu idea en una imagen con un prompt de siete líneas y el contexto de Mi marca.' },
   transcribir: { title: 'Audio y video a texto', desc: 'Transcribe una nota de voz de WhatsApp, un audio o un video de hasta 5 minutos, con tiempos y una versión parafraseada para Mi marca. 10 monedas por el proceso completo.' },
   guion: { title: 'Guion para grabar', desc: 'Sube una foto y cuenta qué vendes. Recibe qué decir y qué grabar para un video de 15, 30 o 60 segundos.' },
@@ -22,7 +23,7 @@ export const TOOLS = {
 
 // Agrupación por objetivo (panel y landing). foto y retrato viven como pestañas de imagen y video3d de imagen3d; cada herramienta en un solo grupo.
 export const TOOL_GROUPS: [string, string, (keyof typeof TOOLS)[]][] = [
-  ['Crear contenido', 'Imágenes, guiones y textos con tu marca', ['imagen', 'imagen3d', 'guion', 'hooks', 'copy', 'prompt']],
+  ['Crear contenido', 'Imágenes, guiones y textos con tu marca', ['semana', 'imagen', 'imagen3d', 'guion', 'hooks', 'copy', 'prompt']],
   ['Analizar', 'Mejora lo que ya tienes antes de publicar', ['video', 'creativo', 'transcribir']],
   ['Vender', 'Precio y atención para cerrar la venta', ['landing', 'landingpro', 'profit', 'whatsapp']],
 ]

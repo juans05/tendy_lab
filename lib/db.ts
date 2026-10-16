@@ -79,6 +79,18 @@ create table if not exists customer_orders(
   created_at timestamptz not null default now());
 alter table order_links add column if not exists page jsonb;
 alter table order_links add column if not exists photos bytea[];
+create table if not exists content_plans(
+  id bigserial primary key, user_id bigint not null references users on delete cascade,
+  product_id bigint references products on delete set null, name text not null default 'Mi semana',
+  platform text not null, objective text not null, days int not null check(days between 1 and 7),
+  auto boolean not null default false, description text not null default '', voice_text text,
+  visual_spec text not null default '', context text not null default '',
+  created_at timestamptz not null default now());
+create index if not exists content_plans_user on content_plans(user_id, id desc);
+create table if not exists plan_weeks(
+  id bigserial primary key, plan_id bigint not null references content_plans on delete cascade,
+  n int not null, run_id bigint not null, start date not null, done int[] not null default '{}',
+  unique(plan_id, n));
 `
 let migration: Promise<void> | undefined
 export function migrate(): Promise<void> {
