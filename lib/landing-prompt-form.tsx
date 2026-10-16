@@ -6,10 +6,25 @@ import { AMBIENTES, buildLandingPrompt, hexesIn, LANDING_FIELDS, OPCIONES, reada
 
 export function LandingPromptForm({ brand, cost }: { brand: Record<string, string>; cost: string }) {
   // Lo que ya está en Mi marca se rellena solo; el usuario puede cambiarlo.
+  const [hexes] = useState(() => hexesIn(brand.palette))
+  const [primary, setPrimary] = useState(hexes[0] || '#FE6900')
+  const [accent, setAccent] = useState(hexes[1] || '#17324D')
   const [form, setD] = useState<Partial<Record<LandingKey, string>>>({
     empresa: brand.name || '', pais: brand.country || '', publico: brand.audience || '',
-    marca_visual: [brand.palette, brand.typography].filter(Boolean).join(' · '),
   })
+  // Logo: se guarda en Mi marca (lo usa la página que crea Tendy) y para el prompt se adjunta como imagen.
+  const [logo, setLogo] = useState('/api/brand/logo')
+  const [logoMsg, setLogoMsg] = useState('')
+  async function uploadLogo(file?: File) {
+    if (!file) return
+    if (file.size > 2 * 1024 * 1024) return setLogoMsg('El logo debe pesar como máximo 2 MB.')
+    setLogoMsg('Guardando…')
+    const body = new FormData(); body.set('logo', file)
+    const res = await fetch('/api/brand/logo', { method: 'POST', body }).catch(() => null)
+    const ok = res?.url.includes('logo=saved')
+    setLogoMsg(ok ? 'Logo guardado en Mi marca.' : 'No se pudo guardar. Usa JPG, PNG o WEBP.')
+    if (ok) setLogo(`/api/brand/logo?v=${Date.now()}`)
+  }
   const [sel, setSel] = useState<Partial<Record<LandingKey, string[]>>>({ redes: OPCIONES.redes!.filter(r => brand.channels?.toLowerCase().includes(r.split(' ')[0].toLowerCase())) })
   const [urls, setUrls] = useState<Record<string, string>>({})
   const [refs, setRefs] = useState([''])
@@ -21,11 +36,9 @@ export function LandingPromptForm({ brand, cost }: { brand: Record<string, strin
     canal: pick('canal').join(', '),
     envios: [pick('envios').length ? `Pagos: ${pick('envios').join(', ')}` : '', form.envios?.trim()].filter(Boolean).join(' · '),
     redes: pick('redes').map(r => `${r}: ${urls[r]?.trim() || 'PENDIENTE'}`).join(', '),
+    marca_visual: [logo ? 'Logo adjunto como imagen (úsalo en la cabecera y el pie)' : '', `colores principal ${primary} y acento ${accent}`, brand.typography && `tipografía: ${brand.typography}`].filter(Boolean).join(' · '),
   }
   const referencia = refs.map(r => r.trim()).filter(Boolean).join(', ')
-  const [hexes] = useState(() => hexesIn(brand.palette))
-  const [primary, setPrimary] = useState(hexes[0] || '#FE6900')
-  const [accent, setAccent] = useState(hexes[1] || '#17324D')
   const [ambiente, setAmbiente] = useState<string>('elegante')
   const [tono, setTono] = useState<string>(TONOS.find(t => brand.tone?.toLowerCase().includes(t)) || 'cercano')
   // El prompt solo se arma al pulsar "Generar"; si luego cambian datos, se avisa para regenerarlo.
@@ -67,16 +80,21 @@ export function LandingPromptForm({ brand, cost }: { brand: Record<string, strin
         {chips('envios', 'Formas de pago')}
         <div className="lp-full">{field('envios', 'Envíos y garantía')}</div>
       </>)}
-      {group('5. Redes y marca', 'Marca tus redes y pega el enlace de cada una.', <>
+      {group('5. Redes y marca', 'Tus redes, los colores de tu marca y tu logo.', <>
         {chips('redes', 'Redes sociales')}
         {pick('redes').map(r => <div key={r}><label htmlFor={`lp-red-${r}`}>Enlace de {r}</label><input id={`lp-red-${r}`} type="url" maxLength={300} placeholder="https://…" value={urls[r] ?? ''} onChange={e => setUrls({ ...urls, [r]: e.target.value })} /></div>)}
-        <div className="lp-full">{field('marca_visual')}</div>
-      </>)}
-
-      {step('02', 'El estilo de tu página', 'Elige los colores de tu marca, el ambiente y el tono. Si guardaste códigos de color en Mi marca, ya están puestos.')}
-      <div className="row">
         <div><label htmlFor="lp-primary">Color principal (botones)</label><input id="lp-primary" type="color" className="lp-color" value={primary} onChange={e => setPrimary(e.target.value)} /></div>
         <div><label htmlFor="lp-accent">Color de acento (títulos)</label><input id="lp-accent" type="color" className="lp-color" value={accent} onChange={e => setAccent(e.target.value)} /></div>
+        <div className="lp-full lp-logo">
+          {logo ? <img src={logo} alt="Tu logo" onError={() => setLogo('')} /> : <span aria-hidden="true">Sin logo</span>}
+          <div><label htmlFor="lp-logo">Logo de tu marca</label><input id="lp-logo" type="file" accept="image/jpeg,image/png,image/webp" onChange={e => uploadLogo(e.target.files?.[0])} />
+            <p className="tag" role="status">{logoMsg || 'JPG, PNG o WEBP · Hasta 2 MB. Se guarda en Mi marca.'}</p></div>
+        </div>
+      </>)}
+      {group('6. Fotos del producto a promocionar', 'Sube las fotos que irán en tu página. Para la opción A, adjúntalas también al pegar el prompt.', <div className="lp-full"><MediaUpload tool="hooks" form="lp-create" /></div>)}
+
+      {step('02', 'El estilo de tu página', 'Elige el ambiente y el tono de los textos.')}
+      <div className="row">
         <div><label htmlFor="lp-ambiente">Ambiente</label><select id="lp-ambiente" value={ambiente} onChange={e => setAmbiente(e.target.value)}>{AMBIENTES.map(a => <option key={a}>{a}</option>)}</select></div>
         <div><label htmlFor="lp-tono">Tono de los textos</label><select id="lp-tono" value={tono} onChange={e => setTono(e.target.value)}>{TONOS.map(t => <option key={t}>{t}</option>)}</select></div>
       </div>
@@ -97,11 +115,10 @@ export function LandingPromptForm({ brand, cost }: { brand: Record<string, strin
       </>}
       <div className="note"><b>🧭 Cómo usarlo</b><ol><li>Copia el prompt.</li><li>Ábrelo en <b>Claude</b> o <b>ChatGPT</b> (con búsqueda web activada), o en <b>Lovable</b> / <b>v0</b> si quieres publicarla directo.</li><li>Adjunta tus fotos y videos del producto en el mismo mensaje.</li><li>Revisa la lista de PENDIENTES que te devuelva y completa esos datos.</li></ol></div>
 
-      {step('04', 'Opción B · Créala aquí en Tendy', 'Usamos los datos y colores de arriba. Sube tus fotos, pon el precio y la publicamos con formulario de pedido y WhatsApp.')}
-      <form method="post" action="/api/runs" encType="multipart/form-data" className="lp-create">
+      {step('04', 'Opción B · Créala aquí en Tendy', 'Usamos los datos, colores, logo y fotos de arriba. Pon el precio y la publicamos con formulario de pedido y WhatsApp.')}
+      <form id="lp-create" method="post" action="/api/runs" encType="multipart/form-data" className="lp-create">
         <input type="hidden" name="tool" value="landing" /><input type="hidden" name="description" value={description} />
         <input type="hidden" name="whatsapp" value={d.whatsapp ?? ''} /><input type="hidden" name="color_primary" value={primary} /><input type="hidden" name="color_accent" value={accent} />
-        <MediaUpload tool="hooks" />
         <label htmlFor="lp-price">Precio por unidad ({brand.currency || 'moneda de Mi marca'})</label><input id="lp-price" name="price" type="number" step="0.01" min="0.01" max="1000000" required />
         {!d.producto?.trim() && <p className="tag">Escribe al menos el nombre del producto en el paso 01.</p>}
         {(!brand.name || !brand.currency) && <p className="err">Antes completa el nombre y la moneda en <a href="/panel/brand">Mi marca</a>.</p>}
