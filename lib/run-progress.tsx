@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { Icon } from './icons'
 
 const CONTENT: Record<string, [string, string, string[]]> = {
-  transcribir: ['Tu video se convierte en texto', 'Estamos escuchando el audio y preparando una versión acorde a Mi marca.', ['Transcripción con tiempos', 'Apertura, desarrollo y cierre', 'Paráfrasis incluida en las 10 monedas']],
+  transcribir: ['Tu archivo se convierte en texto', 'Estamos escuchando el audio y preparando una versión acorde a Mi marca.', ['Transcripción con tiempos', 'Apertura, desarrollo y cierre', 'Paráfrasis incluida en las 10 monedas']],
   imagen: ['Tu idea está tomando forma', 'Estamos creando una imagen a partir de tus siete indicaciones y Mi marca.', ['Una imagen en el formato elegido', 'El prompt completo para copiar', 'Descarga y resultado en tu historial']],
   guion: ['Tu próxima grabación empieza aquí', 'Estamos preparando un guion a partir de tu producto y el contexto de tu marca.', ['Una apertura para captar la atención', 'Qué decir y qué grabar en cada escena', 'Un cierre acorde a tu objetivo']],
   foto: ['Una nueva escena para tu producto', 'Estamos preparando la imagen con el estilo que elegiste.', ['Una versión para catálogo o anuncio', 'Comparación con tu foto original', 'Imagen para descargar y revisar']],

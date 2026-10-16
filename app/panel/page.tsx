@@ -14,7 +14,7 @@ export default async function Dashboard() {
     ficha: ['Tu producto, igual en todas tus imágenes.', '1 foto · Ficha para todas tus imágenes'],
     imagen3d: ['Tu producto con volumen, listo para destacar.', '2 a 3 fotos · Imagen 3D · Video de 8 s'],
     video3d: ['Tu producto girando en un video corto.', '2 a 3 fotos · Video de 8 s'],
-    transcribir: ['Convierte lo que escuchas en ideas para tu marca.', 'Video · Texto con tiempos · Parafrasear'],
+    transcribir: ['Convierte lo que escuchas en ideas para tu marca.', 'Nota de voz o video · Texto con tiempos · Parafrasear'],
     guion: ['Qué decir y qué grabar, escena por escena.', '15, 30 o 60 segundos · Tu marca'],
     foto: ['Dale a tu producto un fondo listo para vender.', 'Catálogo · Anuncio · Descarga'],
     video: ['Haz que los primeros segundos cuenten.', 'Hook · Ritmo · Claridad'],

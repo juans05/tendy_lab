@@ -2,7 +2,7 @@ import { COST } from './credits'
 
 export const TOOLS = {
   imagen: { title: 'Crea una imagen', desc: 'Convierte tu idea en una imagen con un prompt de siete líneas y el contexto de Mi marca.' },
-  transcribir: { title: 'Video a texto', desc: 'Transcribe un video con tiempos y recibe una versión parafraseada para Mi marca. 10 monedas por el proceso completo.' },
+  transcribir: { title: 'Audio y video a texto', desc: 'Transcribe una nota de voz de WhatsApp, un audio o un video de hasta 5 minutos, con tiempos y una versión parafraseada para Mi marca. 10 monedas por el proceso completo.' },
   guion: { title: 'Guion para grabar', desc: 'Sube una foto y cuenta qué vendes. Recibe qué decir y qué grabar para un video de 15, 30 o 60 segundos.' },
   foto: { title: 'Foto lista para vender', desc: 'Cambia o quita el fondo de tu foto, o agrégale lo que pidas, con tu producto como protagonista.' },
   retrato: { title: 'Retrato y portada', desc: 'Sube de 1 a 3 fotos tuyas y recibe un retrato de marca personal o una portada tipo revista, con tu cara tal cual.' },

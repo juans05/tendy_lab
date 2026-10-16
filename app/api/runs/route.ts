@@ -26,15 +26,20 @@ function sniffImage(b: Buffer) {
 // ftyp (mp4/mov) o EBML (webm); la validación real la hace ffprobe en el worker.
 const sniffVideo = (b: Buffer) =>
   b.subarray(4, 8).toString() === 'ftyp' ? 'video/mp4' : b.subarray(0, 4).toString('hex') === '1a45dfa3' ? 'video/webm' : null
+// Notas de voz de WhatsApp (ogg/opus), mp3 y m4a (ftyp M4A); solo para Audio y video a texto.
+const sniffAudio = (b: Buffer) =>
+  b.subarray(0, 4).toString() === 'OggS' ? 'audio/ogg'
+  : b.subarray(0, 3).toString() === 'ID3' || (b[0] === 0xff && (b[1] & 0xe0) === 0xe0) ? 'audio/mpeg'
+  : b.subarray(4, 8).toString() === 'ftyp' && b.subarray(8, 11).toString() === 'M4A' ? 'audio/mp4' : null
 
 // Valida (tamaño + firma real del archivo) y guarda; devuelve los ids o el código de error para ?e=
-async function saveUploads(userId: string, files: File[], video: boolean, max: number, min = 1): Promise<string[] | string> {
+async function saveUploads(userId: string, files: File[], video: boolean, max: number, min = 1, audio = false): Promise<string[] | string> {
   if (files.length < min || files.length > max) return 'files'
   const bufs: { mime: string; name: string; data: Buffer }[] = []
   for (const file of files) {
     if (file.size > (video ? LIMITS.video : LIMITS.image)) return 'size'
     const data = Buffer.from(await file.arrayBuffer())
-    const mime = video ? sniffVideo(data) : sniffImage(data)
+    const mime = video ? (audio && sniffAudio(data)) || sniffVideo(data) : sniffImage(data)
     if (!mime) return 'type'
     bufs.push({ mime, name: file.name.slice(0, 120), data })
   }
@@ -180,7 +185,7 @@ export async function POST(req: Request) {
       return go(`/panel/runs/${await createRun(user.id, tool, { source_url: url, assets: [], brand: user.brand, description, objective, platform })}`)
     }
     const isVideo = tool === 'video' || tool === 'transcribir'
-    const ids = await saveUploads(user.id, files, isVideo, tool === 'hooks' ? 5 : 1)
+    const ids = await saveUploads(user.id, files, isVideo, tool === 'hooks' ? 5 : 1, 1, tool === 'transcribir')
     if (typeof ids === 'string') return back(ids)
     const id = await createRun(user.id, tool, { assets: ids, objective, platform, use_brand: true, brand: user.brand, description, ...(tool === 'guion' ? { duration } : tool === 'foto' ? { style, request, visual_spec: await visualSpec(user.id, f) } : {}) })
     return go(`/panel/runs/${id}`)
