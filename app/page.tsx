@@ -24,7 +24,7 @@ const FAQ = [
   ['¿Necesito seguidores para hacer live?', 'Cada plataforma pone sus propios requisitos para transmitir en vivo y los cambia con el tiempo. En clase revisamos los requisitos vigentes y qué hacer si todavía no los cumples.'],
   ['¿Necesito RUC para empezar?', 'Puedes empezar a vender sin él, pero para emitir comprobantes, verificar WhatsApp Business y crecer conviene formalizarte. La guía de RUC 10 te explica cómo.'],
   ['¿Cómo pago las monedas?', 'Por Yape o Plin. Envías la captura por WhatsApp y las activamos en tu cuenta con tu correo.'],
-  ['¿Cuánto cuesta cada herramienta?', `Crea una imagen ${coins(COST.imagen)}, Analiza mi video ${coins(COST.video)}, Video a texto ${coins(COST.transcribir)}, Hooks, Guion y Analiza mi creativo ${coins(COST.hooks)}. ¿A cuánto lo vendo? es gratis sin límite; Respuestas para WhatsApp y Copy son gratis hasta ${FREE_MONTHLY} veces al mes. Si un análisis falla, te devolvemos las monedas.`],
+  ['¿Cuánto cuesta cada herramienta?', `Crea una imagen ${coins(COST.imagen)}, Analiza mi video ${coins(COST.video)}, Audio y video a texto ${coins(COST.transcribir)}, Hooks, Guion y Analiza mi creativo ${coins(COST.hooks)}. ¿A cuánto lo vendo? es gratis sin límite; Respuestas para WhatsApp y Copy son gratis hasta ${FREE_MONTHLY} veces al mes. Si un análisis falla, te devolvemos las monedas.`],
   ['¿Qué pasa con mis archivos?', 'Son privados y solo los ves tú. Se eliminan a los 30 días. No los usamos para entrenar modelos propios; se procesan con proveedores de IA únicamente para generar tu resultado.'],
 ]
 // La ruta en tres pasos, impresa como boleta: [paso, qué hacemos, qué incluye]

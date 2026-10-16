@@ -7,6 +7,7 @@ export function PanelNav({ admin }: { admin: boolean }) {
   return <nav aria-label="Navegación de la miniApp">
     {[
       ['/panel/products', 'Mi ruta ecommerce', '↗'],
+      ['/panel/semana', 'Mi semana', '▦'],
       ['/panel/orders', 'Mis pedidos', '▤'],
       ['/panel', 'Herramientas', '◫'],
       ['/panel/history', 'Mis análisis', '◷'],

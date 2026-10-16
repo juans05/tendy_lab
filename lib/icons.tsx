@@ -1,4 +1,5 @@
 const P: Record<string, React.ReactNode> = {
+  semana: <><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18M8 3v4M16 3v4M7 14h2M11 14h2M15 14h2M7 17h2" /></>,
   transcribir: <><rect x="3" y="3" width="18" height="18" rx="2" /><path d="m8 7 5 3-5 3M7 17h10" /></>,
   imagen: <><rect x="3" y="4" width="18" height="16" rx="2" /><path d="m3 17 5-5 4 4 4-5 5 6M16 2v5M14 4h5" /></>,
   guion: <><rect x="5" y="3" width="14" height="18" rx="2" /><path d="M9 7h6M9 11h6M9 15h4" /></>,

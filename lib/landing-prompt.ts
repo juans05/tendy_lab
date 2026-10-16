@@ -14,11 +14,17 @@ export const LANDING_FIELDS = [
   ['precio', 'Precio y promociones', 'Ej.: S/ 89, 2 por S/ 160'],
   ['canal', 'Canal de venta', 'Ej.: WhatsApp y formulario'],
   ['whatsapp', 'Número de WhatsApp / enlace de compra', 'Ej.: +51 987 654 321'],
-  ['envios', 'Envíos, formas de pago y garantía', 'Ej.: Lima 24 h, Yape/Plin, 3 meses de garantía'],
+  ['envios', 'Envíos, formas de pago y garantía', 'Envíos y garantía, ej.: Lima 24 h, 3 meses de garantía'],
   ['redes', 'Redes sociales', 'Ej.: @mimarca en Instagram y TikTok'],
   ['marca_visual', 'Logo o colores de marca', ''],
 ] as const
 export type LandingKey = typeof LANDING_FIELDS[number][0]
+// Campos que se eligen con casillas en vez de escribirse.
+export const OPCIONES: Partial<Record<LandingKey, readonly string[]>> = {
+  canal: ['WhatsApp', 'Formulario web', 'Tienda online', 'Llamada', 'Tienda física'],
+  envios: ['Yape', 'Plin', 'Transferencia', 'Tarjeta', 'Contraentrega'],
+  redes: ['Instagram', 'TikTok', 'Facebook', 'YouTube', 'X (Twitter)'],
+}
 export const AMBIENTES = ['divertido', 'elegante', 'técnico', 'natural', 'premium', 'festivo', 'minimalista', 'juvenil'] as const
 export const TONOS = ['cercano', 'entusiasta', 'profesional', 'inspirador', 'directo'] as const
 

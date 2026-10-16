@@ -2,19 +2,31 @@
 import { useState } from 'react'
 import { CopyText } from './copy-text'
 import { MediaUpload } from './media-upload'
-import { AMBIENTES, buildLandingPrompt, hexesIn, LANDING_FIELDS, readableOn, TONOS, type LandingKey } from './landing-prompt'
+import { AMBIENTES, buildLandingPrompt, hexesIn, LANDING_FIELDS, OPCIONES, readableOn, TONOS, type LandingKey } from './landing-prompt'
 
 export function LandingPromptForm({ brand, cost }: { brand: Record<string, string>; cost: string }) {
   // Lo que ya está en Mi marca se rellena solo; el usuario puede cambiarlo.
-  const [d, setD] = useState<Partial<Record<LandingKey, string>>>({
-    empresa: brand.name || '', pais: brand.country || '', publico: brand.audience || '', redes: brand.channels || '',
+  const [form, setD] = useState<Partial<Record<LandingKey, string>>>({
+    empresa: brand.name || '', pais: brand.country || '', publico: brand.audience || '',
     marca_visual: [brand.palette, brand.typography].filter(Boolean).join(' · '),
   })
+  const [sel, setSel] = useState<Partial<Record<LandingKey, string[]>>>({ redes: OPCIONES.redes!.filter(r => brand.channels?.toLowerCase().includes(r.split(' ')[0].toLowerCase())) })
+  const [urls, setUrls] = useState<Record<string, string>>({})
+  const [refs, setRefs] = useState([''])
+  const pick = (k: LandingKey) => sel[k] ?? []
+  const toggle = (k: LandingKey, o: string) => setSel(s => ({ ...s, [k]: pick(k).includes(o) ? pick(k).filter(x => x !== o) : [...pick(k), o] }))
+  // Las casillas se convierten en texto para el prompt y la descripción.
+  const d = {
+    ...form,
+    canal: pick('canal').join(', '),
+    envios: [pick('envios').length ? `Pagos: ${pick('envios').join(', ')}` : '', form.envios?.trim()].filter(Boolean).join(' · '),
+    redes: pick('redes').map(r => `${r}: ${urls[r]?.trim() || 'PENDIENTE'}`).join(', '),
+  }
+  const referencia = refs.map(r => r.trim()).filter(Boolean).join(', ')
   const [hexes] = useState(() => hexesIn(brand.palette))
   const [primary, setPrimary] = useState(hexes[0] || '#FE6900')
   const [accent, setAccent] = useState(hexes[1] || '#17324D')
   const [ambiente, setAmbiente] = useState<string>('elegante')
-  const [referencia, setReferencia] = useState('')
   const [tono, setTono] = useState<string>(TONOS.find(t => brand.tone?.toLowerCase().includes(t)) || 'cercano')
   const prompt = buildLandingPrompt(d, ambiente, tono, { primary, accent }, referencia)
   const filled = LANDING_FIELDS.filter(([k]) => d[k]?.trim()).length
@@ -26,8 +38,14 @@ export function LandingPromptForm({ brand, cost }: { brand: Record<string, strin
       {step('01', 'Datos de tu producto', 'Completa lo que sepas. Lo vacío saldrá como PENDIENTE y la IA lo marcará en la página para que lo completes.')}
       <div className="lp-progress" role="status"><b>{filled} de {LANDING_FIELDS.length}</b> datos completos<span><i style={{ width: `${(filled / LANDING_FIELDS.length) * 100}%` }} /></span></div>
       <div className="lp-grid">
-        {LANDING_FIELDS.map(([k, label, ph]) => (
-          <div key={k}><label htmlFor={`lp-${k}`}>{label}</label><input id={`lp-${k}`} maxLength={300} placeholder={ph} value={d[k] ?? ''} onChange={e => setD({ ...d, [k]: e.target.value })} /></div>
+        {LANDING_FIELDS.map(([k, label, ph]) => OPCIONES[k] ? (
+          <fieldset key={k} className="tweak-kinds"><legend>{label}</legend>
+            {OPCIONES[k]!.map(o => <label key={o} className="check"><input type="checkbox" checked={pick(k).includes(o)} onChange={() => toggle(k, o)} />{o}</label>)}
+            {k === 'envios' && <input style={{ flexBasis: '100%' }} aria-label="Envíos y garantía" maxLength={300} placeholder={ph} value={form.envios ?? ''} onChange={e => setD({ ...form, envios: e.target.value })} />}
+            {k === 'redes' && pick('redes').map(r => <input key={r} type="url" style={{ flexBasis: '100%' }} aria-label={`Enlace de ${r}`} maxLength={300} placeholder={`Enlace de ${r} (https://…)`} value={urls[r] ?? ''} onChange={e => setUrls({ ...urls, [r]: e.target.value })} />)}
+          </fieldset>
+        ) : (
+          <div key={k}><label htmlFor={`lp-${k}`}>{label}</label><input id={`lp-${k}`} maxLength={300} placeholder={ph} value={form[k] ?? ''} onChange={e => setD({ ...form, [k]: e.target.value })} /></div>
         ))}
       </div>
 
@@ -38,7 +56,9 @@ export function LandingPromptForm({ brand, cost }: { brand: Record<string, strin
         <div><label htmlFor="lp-ambiente">Ambiente</label><select id="lp-ambiente" value={ambiente} onChange={e => setAmbiente(e.target.value)}>{AMBIENTES.map(a => <option key={a}>{a}</option>)}</select></div>
         <div><label htmlFor="lp-tono">Tono de los textos</label><select id="lp-tono" value={tono} onChange={e => setTono(e.target.value)}>{TONOS.map(t => <option key={t}>{t}</option>)}</select></div>
       </div>
-      <label htmlFor="lp-ref">Web de referencia (opcional)</label><input id="lp-ref" type="url" maxLength={300} placeholder="Ej.: una web que te guste de Awwwards, Godly o Land-book" value={referencia} onChange={e => setReferencia(e.target.value)} />
+      <label htmlFor="lp-ref-0">Webs de referencia (opcional)</label>
+      {refs.map((r, i) => <input key={i} id={`lp-ref-${i}`} type="url" maxLength={300} placeholder="Ej.: una web que te guste de Awwwards, Godly o Land-book" value={r} onChange={e => setRefs(refs.map((x, j) => (j === i ? e.target.value : x)))} />)}
+      {refs.length < 5 && <button type="button" onClick={() => setRefs([...refs, ''])}>+ Agregar otra web</button>}
       <p className="tag">La IA toma su estructura, tipografías y espacios, pero no copia su marca ni sus textos. Es el truco que más evita que tu web parezca hecha con IA.</p>
       <div className="lp-swatch" aria-label="Vista previa de colores"><b style={{ color: accent }}>{d.producto || 'Tu producto'}</b><span style={{ background: primary, color: readableOn(primary) }}>Pedir ahora ↗</span></div>
 
