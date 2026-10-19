@@ -2,12 +2,21 @@
 
 import { useState } from 'react'
 import type { Scene } from './av-story'
+import { applyEndMode, endMode, type EndMode } from './av-editor-modes'
 
-// Editor de la historia: solo título y video son obligatorios por capítulo; lo demás va en "Opcional".
+// Editor de la historia: barra fija con guardar/publicar, lista de capítulos a la izquierda y el capítulo
+// elegido a la derecha. Por capítulo solo título y video son obligatorios; el final se decide con una sola pregunta.
 type Data = { title: string; description: string; minutes: number; cover: string | null; character_image: string | null; mission: { title: string; text: string; tips: string[] }; scenes: Scene[] }
 type Result = { errors: string[]; warnings: string[]; unpublished?: boolean; published?: boolean; scenes?: Scene[] }
 
-function CloudUpload({ kind, value, onChange, slug, cloud }: { kind: 'video' | 'image'; value: string | null | undefined; onChange: (id: string | null) => void; slug: string; cloud: string }) {
+const MODES: { mode: EndMode; label: string; help: string }[] = [
+  { mode: 'next', label: 'Sigue al siguiente capítulo', help: 'Si es el último, pasa a la misión de pintura.' },
+  { mode: 'choose', label: 'El niño elige qué hacer', help: '2 o 3 botones, cada uno lleva a un capítulo.' },
+  { mode: 'jump', label: 'Salta a otro capítulo', help: 'Útil para unir dos caminos.' },
+  { mode: 'end', label: 'Termina la historia', help: 'Después va la misión de pintura.' },
+]
+
+function CloudUpload({ kind, value, onChange, slug, cloud, label }: { kind: 'video' | 'image'; value: string | null | undefined; onChange: (id: string | null) => void; slug: string; cloud: string; label: string }) {
   const [pct, setPct] = useState<number | null>(null)
   const [err, setErr] = useState('')
   async function upload(file: File) {
@@ -24,13 +33,13 @@ function CloudUpload({ kind, value, onChange, slug, cloud }: { kind: 'video' | '
     setPct(0); x.send(fd)
   }
   const url = value && `https://res.cloudinary.com/${cloud}/${kind}/upload/q_auto,f_auto,w_480/${value}`
-  return <div>
-    {url && (kind === 'video' ? <video src={url} controls preload="metadata" style={{ width: '100%', maxWidth: 360, borderRadius: 10 }} /> : <img src={url} alt="" style={{ maxWidth: 200, borderRadius: 10 }} />)}
-    <div className="av-row">
-      <input type="file" accept={kind === 'video' ? 'video/mp4,video/quicktime,video/webm' : 'image/jpeg,image/png,image/webp'} onChange={e => { const f = e.currentTarget.files?.[0]; if (f) upload(f) }} aria-label={kind === 'video' ? 'Subir video' : 'Subir imagen'} />
-      {value && kind === 'image' && <button type="button" className="link" onClick={() => onChange(null)}>Quitar</button>}
-    </div>
-    {pct !== null && <progress max={100} value={pct} style={{ width: '100%' }}>{pct}%</progress>}
+  return <div className={`ed-upload${url ? ' has' : ''}`}>
+    {url && (kind === 'video' ? <video src={url} controls preload="metadata" /> : <img src={url} alt="" />)}
+    {pct !== null ? <progress max={100} value={pct}>{pct}%</progress> : <label className="ed-pick">
+      {url ? `Cambiar ${kind === 'video' ? 'video' : 'imagen'}` : `＋ ${label}`}
+      <input type="file" accept={kind === 'video' ? 'video/mp4,video/quicktime,video/webm' : 'image/jpeg,image/png,image/webp'} onChange={e => { const f = e.currentTarget.files?.[0]; if (f) upload(f); e.currentTarget.value = '' }} aria-label={label} />
+    </label>}
+    {value && kind === 'image' && pct === null && <button type="button" className="link" onClick={() => onChange(null)}>Quitar</button>}
     {err && <p className="err">{err}</p>}
   </div>
 }
@@ -40,15 +49,17 @@ export function StoryEditor({ id, slug, published: pub0, cloud, initial }: { id:
   const [published, setPublished] = useState(pub0)
   const [result, setResult] = useState<Result | null>(null)
   const [busy, setBusy] = useState(false)
-  const [seq, setSeq] = useState(0)
-  const set = (patch: Partial<Data>) => setD(x => ({ ...x, ...patch }))
-  const setScene = (i: number, patch: Partial<Scene>) => set({ scenes: d.scenes.map((s, j) => j === i ? { ...s, ...patch } : s) })
-  const move = (i: number, by: number) => { const s = [...d.scenes]; const [x] = s.splice(i, 1); s.splice(i + by, 0, x); set({ scenes: s }) }
+  const [dirty, setDirty] = useState(false)
+  const [sel, setSel] = useState(0)
+  const set = (patch: Partial<Data>) => { setD(x => ({ ...x, ...patch })); setDirty(true) }
+  const setScene = (i: number, s: Scene) => set({ scenes: d.scenes.map((x, j) => j === i ? s : x) })
+  const move = (i: number, by: number) => { const s = [...d.scenes]; const [x] = s.splice(i, 1); s.splice(i + by, 0, x); set({ scenes: s }); setSel(i + by) }
   const remove = (i: number) => {
     const gone = d.scenes[i].id
     set({ scenes: d.scenes.filter((_, j) => j !== i).map(s => ({ ...s, next: s.next === gone ? null : s.next, choices: s.choices.filter(c => c.next !== gone) })) })
+    setSel(Math.max(0, i - 1))
   }
-  const add = () => { setSeq(n => n + 1); set({ scenes: [...d.scenes, { id: `n${Date.now()}-${seq}`, title: '', video: '', description: '', image: null, next: null, ending: false, choices: [] }] }) }
+  const add = () => { set({ scenes: [...d.scenes, { id: `n${Date.now()}`, title: '', video: '', description: '', image: null, next: null, ending: false, choices: [] }] }); setSel(d.scenes.length) }
   const name = (sid: string) => { const i = d.scenes.findIndex(s => s.id === sid); return `${i + 1}. ${d.scenes[i]?.title || 'Sin título'}` }
 
   async function save(): Promise<Result | null> {
@@ -56,7 +67,7 @@ export function StoryEditor({ id, slug, published: pub0, cloud, initial }: { id:
     const r = await fetch(`/api/admin/aventuras/historias/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(d) }).then(r => r.json()).catch(() => ({ errors: ['No se pudo guardar. Revisa tu conexión.'], warnings: [] }))
     setBusy(false); setResult(r)
     if (r.unpublished) setPublished(false)
-    if (r.scenes) set({ scenes: r.scenes }) // ids reales: el próximo guardado no duplica capítulos
+    if (r.scenes) { setD(x => ({ ...x, scenes: r.scenes })); setDirty(false) } // ids reales: el próximo guardado no duplica capítulos
     return r
   }
   async function publish(action: 'publish' | 'unpublish') {
@@ -66,61 +77,128 @@ export function StoryEditor({ id, slug, published: pub0, cloud, initial }: { id:
     setBusy(false); setResult(r); setPublished(r.published)
   }
 
-  return <div>
-    <div className="av-row"><span className={`av-badge${published ? ' on' : ''}`}>{published ? 'Publicada' : 'Borrador'}</span>
-      <a href={`/aventuras/${slug}?preview=1`} target="_blank" rel="noopener">Vista previa ↗</a></div>
-    {result && <>
+  const s = d.scenes[sel]
+  const mode = s && endMode(s)
+  const others = s ? d.scenes.filter(x => x.id !== s.id) : []
+  return <div className="ed">
+    <style>{CSS}</style>
+    <header className="ed-bar">
+      <div><b>{d.title || 'Sin título'}</b> <span className={`av-badge${published ? ' on' : ''}`}>{published ? 'Publicada' : 'Borrador'}</span>
+        {dirty && <span className="ed-dirty">● Cambios sin guardar</span>}</div>
+      <div className="ed-actions">
+        <a className="btn ghost" href={`/aventuras/${slug}?preview=1`} target="_blank" rel="noopener">Vista previa ↗</a>
+        <button type="button" className="btn ghost" onClick={save} disabled={busy}>Guardar</button>
+        {published ? <button type="button" className="btn ghost" onClick={() => publish('unpublish')} disabled={busy}>Despublicar</button>
+          : <button type="button" onClick={() => publish('publish')} disabled={busy}>Publicar</button>}
+      </div>
+    </header>
+    {result && <div className="ed-result" role="status">
       {result.unpublished && <p className="av-errs">La historia tenía errores y se despublicó para que ningún niño se quede atascado.</p>}
       {!!result.errors?.length && <ul className="av-errs">{result.errors.map(e => <li key={e}>{e}</li>)}</ul>}
       {!!result.warnings?.length && <ul className="av-warns">{result.warnings.map(e => <li key={e}>{e}</li>)}</ul>}
       {!result.errors?.length && <p className="ok">{result.published ? '¡Publicada!' : 'Guardado.'}</p>}
-    </>}
+    </div>}
 
-    <section className="av-card">
-      <h3>Datos generales</h3>
-      <label htmlFor="t">Título *</label><input id="t" value={d.title} onChange={e => set({ title: e.target.value })} maxLength={160} />
-      <label htmlFor="ds">Descripción *</label><textarea id="ds" value={d.description} onChange={e => set({ description: e.target.value })} rows={2} maxLength={600} />
-      <label>Imagen del personaje</label>
-      <p className="tag">Se muestra en la portada, la misión y el diploma. Recomendado: PNG cuadrado con fondo transparente. Sin imagen se usa Fantasmín.</p>
-      <CloudUpload kind="image" value={d.character_image} onChange={v => set({ character_image: v })} slug={slug} cloud={cloud} />
-      <label htmlFor="mi">Duración (minutos)</label><input id="mi" type="number" min={1} max={60} value={d.minutes} onChange={e => set({ minutes: Number(e.target.value) })} />
-      <details><summary>Misión de pintura</summary>
+    <div className="ed-top">
+      <section className="ed-card"><h3><span className="ed-n">1</span> La aventura</h3>
+        <label htmlFor="t">Título</label><input id="t" value={d.title} onChange={e => set({ title: e.target.value })} maxLength={160} />
+        <label htmlFor="ds">Descripción corta (se ve en la portada)</label><textarea id="ds" value={d.description} onChange={e => set({ description: e.target.value })} rows={2} maxLength={600} />
+        <label htmlFor="mi">Duración aproximada</label><div className="ed-inline"><input id="mi" type="number" min={1} max={60} value={d.minutes} onChange={e => set({ minutes: Number(e.target.value) })} /> minutos</div>
+      </section>
+      <section className="ed-card"><h3><span className="ed-n">2</span> Personaje</h3>
+        <p className="tag">Se ve en la portada, la misión y el diploma. Mejor PNG cuadrado con fondo transparente.</p>
+        <CloudUpload kind="image" label="Subir imagen del personaje" value={d.character_image} onChange={v => set({ character_image: v })} slug={slug} cloud={cloud} />
+      </section>
+      <section className="ed-card"><h3><span className="ed-n">3</span> Misión de pintura</h3>
         <label htmlFor="mt">Título</label><input id="mt" value={d.mission.title} onChange={e => set({ mission: { ...d.mission, title: e.target.value } })} placeholder="¡Ahora empieza tu misión!" />
-        <label htmlFor="mx">Texto</label><textarea id="mx" value={d.mission.text} onChange={e => set({ mission: { ...d.mission, text: e.target.value } })} rows={2} />
+        <label htmlFor="mx">Qué debe hacer el niño</label><textarea id="mx" value={d.mission.text} onChange={e => set({ mission: { ...d.mission, text: e.target.value } })} rows={2} />
         <label htmlFor="mtips">Consejos (uno por línea)</label><textarea id="mtips" value={d.mission.tips.join('\n')} onChange={e => set({ mission: { ...d.mission, tips: e.target.value.split('\n').slice(0, 8) } })} rows={3} />
-      </details>
-    </section>
+      </section>
+    </div>
 
-    <h2>Capítulos</h2>
-    {!d.scenes.length && <p className="tag">Aún no hay capítulos. Agrega el primero: solo necesitas título y video.</p>}
-    {d.scenes.map((s, i) => <section className="av-card" key={s.id} aria-label={`Capítulo ${i + 1}`}>
-      <div className="av-row" style={{ justifyContent: 'space-between' }}><h3>Capítulo {i + 1}{i === 0 && ' (inicio)'}</h3>
-        <div className="av-row"><button type="button" className="link" disabled={i === 0} onClick={() => move(i, -1)}>↑ Subir</button>
-          <button type="button" className="link" disabled={i === d.scenes.length - 1} onClick={() => move(i, 1)}>↓ Bajar</button>
-          <button type="button" className="link" onClick={() => remove(i)}>Borrar</button></div></div>
-      <label htmlFor={`st${i}`}>Título *</label><input id={`st${i}`} value={s.title} onChange={e => setScene(i, { title: e.target.value })} maxLength={160} />
-      <label>Video *</label><CloudUpload kind="video" value={s.video} onChange={v => setScene(i, { video: v ?? '' })} slug={slug} cloud={cloud} />
-      <details><summary>Opcional: descripción, imagen, decisiones, siguiente, final</summary>
-        <label htmlFor={`sd${i}`}>Descripción (se muestra como texto bajo el video)</label><textarea id={`sd${i}`} value={s.description ?? ''} onChange={e => setScene(i, { description: e.target.value })} rows={2} />
-        <label>Imagen (portada del video)</label><CloudUpload kind="image" value={s.image} onChange={v => setScene(i, { image: v })} slug={slug} cloud={cloud} />
-        <label>Decisiones (0, 2 o 3 opciones)</label>
-        {s.choices.map((c, j) => <div className="av-row" key={j}>
-          <input aria-label={`Texto de la opción ${j + 1}`} value={c.label} placeholder="Ej. Entrar al bosque" onChange={e => setScene(i, { choices: s.choices.map((x, k) => k === j ? { ...x, label: e.target.value } : x) })} style={{ flex: 1 }} />
-          <select aria-label={`Destino de la opción ${j + 1}`} value={c.next} onChange={e => setScene(i, { choices: s.choices.map((x, k) => k === j ? { ...x, next: e.target.value } : x) })} style={{ flex: 1 }}>
-            {d.scenes.filter(x => x.id !== s.id).map(x => <option key={x.id} value={x.id}>{name(x.id)}</option>)}</select>
-          <button type="button" className="link" onClick={() => setScene(i, { choices: s.choices.filter((_, k) => k !== j) })}>Quitar</button></div>)}
-        {s.choices.length < 3 && d.scenes.length > 1 && <button type="button" className="btn ghost" onClick={() => setScene(i, { choices: [...s.choices, { label: '', next: d.scenes.find(x => x.id !== s.id)!.id }] })}>+ Agregar opción</button>}
-        {!s.choices.length && <><label htmlFor={`sn${i}`}>Capítulo siguiente (si no, sigue el orden de la lista)</label>
-          <select id={`sn${i}`} value={s.next ?? ''} onChange={e => setScene(i, { next: e.target.value || null })}><option value="">Siguiente de la lista</option>
-            {d.scenes.filter(x => x.id !== s.id).map(x => <option key={x.id} value={x.id}>{name(x.id)}</option>)}</select>
-          <label className="check"><input type="checkbox" checked={s.ending} onChange={e => setScene(i, { ending: e.target.checked })} /> Es un final (después va la misión de pintura)</label></>}
-      </details>
-    </section>)}
-    <button type="button" className="btn ghost" onClick={add}>+ Agregar capítulo</button>
-    <div className="av-row" style={{ position: 'sticky', bottom: 0, background: 'var(--cream)', padding: '10px 0' }}>
-      <button type="button" onClick={save} disabled={busy}>Guardar</button>
-      {published ? <button type="button" className="btn ghost" onClick={() => publish('unpublish')} disabled={busy}>Despublicar</button>
-        : <button type="button" className="btn ghost" onClick={() => publish('publish')} disabled={busy}>Validar y publicar</button>}
+    <h3 className="ed-h"><span className="ed-n">4</span> Capítulos</h3>
+    <div className="ed-split">
+      <nav className="ed-list" aria-label="Capítulos">
+        {d.scenes.map((x, i) => <button type="button" key={x.id} className={i === sel ? 'on' : ''} onClick={() => setSel(i)} aria-current={i === sel}>
+          <span className="ed-num">{i + 1}</span><span className="ed-t">{x.title || 'Sin título'}</span>
+          <span className={x.video ? 'ed-ok' : 'ed-warn'} title={x.video ? 'Tiene video' : 'Falta el video'}>{x.video ? '✓' : '⚠'}</span>
+        </button>)}
+        <button type="button" className="ed-add" onClick={add}>＋ Agregar capítulo</button>
+      </nav>
+
+      {s ? <section className="ed-card ed-scene" aria-label={`Capítulo ${sel + 1}`}>
+        <div className="ed-scene-head"><h3>Capítulo {sel + 1}{sel === 0 && <small> · inicio de la historia</small>}</h3>
+          <div><button type="button" className="link" disabled={sel === 0} onClick={() => move(sel, -1)} aria-label="Subir capítulo">↑</button>
+            <button type="button" className="link" disabled={sel === d.scenes.length - 1} onClick={() => move(sel, 1)} aria-label="Bajar capítulo">↓</button>
+            <button type="button" className="link ed-del" onClick={() => remove(sel)}>Borrar</button></div></div>
+        <label htmlFor="st">Título *</label><input id="st" value={s.title} onChange={e => setScene(sel, { ...s, title: e.target.value })} maxLength={160} placeholder="Ej. El bosque encantado" />
+        <label>Video *</label>
+        <CloudUpload kind="video" label="Subir video del capítulo" value={s.video} onChange={v => setScene(sel, { ...s, video: v ?? '' })} slug={slug} cloud={cloud} />
+
+        <fieldset className="ed-modes"><legend>¿Qué pasa al terminar el video?</legend>
+          {MODES.map(m => <label key={m.mode} className={mode === m.mode ? 'on' : ''}>
+            <input type="radio" name={`mode-${s.id}`} checked={mode === m.mode} disabled={m.mode !== 'next' && m.mode !== 'end' && !others.length}
+              onChange={() => setScene(sel, applyEndMode(s, m.mode, d.scenes))} />
+            <span><b>{m.label}</b><small>{m.help}</small></span></label>)}
+        </fieldset>
+        {mode === 'choose' && <div className="ed-choices">
+          {s.choices.map((c, j) => <div className="ed-choice" key={j}>
+            <input aria-label={`Texto de la opción ${j + 1}`} value={c.label} placeholder={`Botón ${j + 1}, ej. Entrar al bosque`} onChange={e => setScene(sel, { ...s, choices: s.choices.map((x, k) => k === j ? { ...x, label: e.target.value } : x) })} />
+            <span>→</span>
+            <select aria-label={`Destino de la opción ${j + 1}`} value={c.next} onChange={e => setScene(sel, { ...s, choices: s.choices.map((x, k) => k === j ? { ...x, next: e.target.value } : x) })}>
+              {others.map(x => <option key={x.id} value={x.id}>{name(x.id)}</option>)}</select>
+            {s.choices.length > 2 && <button type="button" className="link" onClick={() => setScene(sel, { ...s, choices: s.choices.filter((_, k) => k !== j) })}>Quitar</button>}
+          </div>)}
+          {s.choices.length < 3 && <button type="button" className="link" onClick={() => setScene(sel, { ...s, choices: [...s.choices, { label: '', next: others[0].id }] })}>＋ Tercera opción</button>}
+        </div>}
+        {mode === 'jump' && <select aria-label="Capítulo al que salta" value={s.next ?? ''} onChange={e => setScene(sel, { ...s, next: e.target.value })}>
+          {others.map(x => <option key={x.id} value={x.id}>{name(x.id)}</option>)}</select>}
+
+        <details className="ed-more"><summary>Más opciones (texto bajo el video, imagen de portada)</summary>
+          <label htmlFor="sd">Texto bajo el video (ayuda a quien no puede escuchar)</label><textarea id="sd" value={s.description ?? ''} onChange={e => setScene(sel, { ...s, description: e.target.value })} rows={2} />
+          <label>Imagen antes de dar play</label>
+          <CloudUpload kind="image" label="Subir imagen" value={s.image} onChange={v => setScene(sel, { ...s, image: v })} slug={slug} cloud={cloud} />
+        </details>
+      </section> : <section className="ed-card ed-empty"><p>Aún no hay capítulos.</p><p className="tag">Solo necesitas un título y un video por capítulo.</p>
+        <button type="button" onClick={add}>＋ Agregar el primer capítulo</button></section>}
     </div>
   </div>
 }
+
+const CSS = `
+.ed-bar{position:sticky;top:0;z-index:5;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;background:var(--cream);padding:10px 0;border-bottom:1px solid var(--line);margin-bottom:12px}
+.ed-bar .btn,.ed-bar button{margin:0;padding:9px 16px}.ed-actions{display:flex;gap:8px;flex-wrap:wrap}
+.ed-dirty{color:var(--orange-dark);font-weight:700;font-size:.85rem;margin-left:8px}
+.ed-top{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.ed-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px}
+.ed-card h3,.ed-h{display:flex;align-items:center;gap:8px;margin:0 0 6px}.ed-h{margin:26px 0 12px}
+.ed-n{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--orange);color:var(--ink);font-size:.85rem;font-weight:800}
+.ed-inline{display:flex;align-items:center;gap:8px}.ed-inline input{max-width:90px}
+.ed-split{display:grid;grid-template-columns:260px 1fr;gap:14px;align-items:start}
+@media(max-width:760px){.ed-split{grid-template-columns:1fr}}
+.ed-list{display:grid;gap:6px;position:sticky;top:70px}
+.ed-list button{display:flex;align-items:center;gap:10px;margin:0;padding:10px 12px;background:#fff;color:var(--ink);border:1px solid var(--line);border-radius:12px;text-align:left;font-weight:600}
+.ed-list button:hover{background:var(--soft);color:var(--ink);border-color:var(--orange)}
+.ed-list button.on{border:2px solid var(--orange);background:var(--soft)}
+.ed-num{display:inline-grid;place-items:center;min-width:24px;height:24px;border-radius:8px;background:var(--navy);color:#fff;font-size:.8rem}
+.ed-t{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ed-ok{color:var(--ok)}.ed-warn{color:var(--bad)}
+.ed-list .ed-add{justify-content:center;border-style:dashed;color:var(--orange-dark)}
+.ed-scene-head{display:flex;justify-content:space-between;align-items:center}.ed-scene-head small{font-weight:500;color:var(--muted)}
+.ed-scene-head button{margin:0 4px;font-size:1.1rem}.ed-del{color:var(--bad)!important}
+.ed-upload{display:grid;gap:8px;justify-items:start}.ed-upload video,.ed-upload img{width:100%;max-width:420px;border-radius:12px;background:#000}
+.ed-upload img{background:repeating-conic-gradient(#eee 0 25%,#fff 0 50%) 0 0/16px 16px;max-width:200px}
+.ed-pick{position:relative;display:inline-flex;align-items:center;gap:6px;margin:0;padding:12px 18px;border:2px dashed var(--orange);border-radius:12px;background:var(--soft);color:var(--orange-dark);font-weight:800;cursor:pointer}
+.ed-upload:not(.has) .ed-pick{width:100%;justify-content:center;padding:22px}
+.ed-pick input{position:absolute;inset:0;opacity:0;cursor:pointer}.ed-pick:focus-within{outline:3px solid var(--navy)}
+.ed-upload progress{width:100%;max-width:420px}
+.ed-modes{border:0;padding:0;margin:18px 0 8px;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px}
+.ed-modes legend{font-weight:800;color:var(--navy);margin-bottom:8px}
+.ed-modes label{display:flex;gap:10px;align-items:flex-start;margin:0;padding:12px;border:1px solid var(--line);border-radius:12px;cursor:pointer;font-weight:500}
+.ed-modes label.on{border:2px solid var(--orange);background:var(--soft)}.ed-modes input{width:auto;margin-top:3px}
+.ed-modes small{display:block;color:var(--muted);font-size:.82rem}
+.ed-choices{display:grid;gap:8px;background:var(--soft);border-radius:12px;padding:12px}
+.ed-choice{display:grid;grid-template-columns:1fr auto 1fr auto;gap:8px;align-items:center}
+@media(max-width:600px){.ed-choice{grid-template-columns:1fr}}
+.ed-more{margin-top:16px}.ed-more summary{cursor:pointer;font-weight:700;color:var(--navy)}
+.ed-empty{text-align:center}
+`
