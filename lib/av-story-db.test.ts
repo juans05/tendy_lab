@@ -68,3 +68,23 @@ test('guardar historia: no puede tocar capítulos de otra aventura', opts, async
   assert.equal((await loadStory(a)).scenes[0].title, 'De A')
   assert.equal((await loadStory(b)).scenes[0].title, 'Robado') // se creó como capítulo nuevo de B
 })
+
+test('guardar historia: la imagen del personaje se guarda en su personaje', opts, async () => {
+  const { saveStory } = await import('./av-story-db')
+  const { q } = await import('./db')
+  const id = await adventure()
+  const [c] = await q(`select collection_id from adventures where id=$1`, [id])
+  const [ch] = await q(`insert into characters(collection_id,slug,name) values($1,$2,'Bruno') returning id`, [c.collection_id, `bruno-${Date.now()}`])
+  await q(`update adventures set character_id=$2 where id=$1`, [id, ch.id])
+  await saveStory(id, { ...base, character_image: 'tendy-aventuras/bruno/img1', scenes: [] })
+  assert.equal((await q(`select image_public_id from characters where id=$1`, [ch.id]))[0].image_public_id, 'tendy-aventuras/bruno/img1')
+})
+
+test('guardar historia: sin personaje, subir su imagen crea uno con el título', opts, async () => {
+  const { saveStory } = await import('./av-story-db')
+  const { q } = await import('./db')
+  const id = await adventure()
+  await saveStory(id, { ...base, character_image: 'tendy-aventuras/x/img2', scenes: [] })
+  const [r] = await q(`select ch.name,ch.image_public_id from adventures a join characters ch on ch.id=a.character_id where a.id=$1`, [id])
+  assert.deepEqual([r.name, r.image_public_id], ['Nueva', 'tendy-aventuras/x/img2'])
+})

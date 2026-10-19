@@ -4,7 +4,7 @@ import { useState } from 'react'
 import type { Scene } from './av-story'
 
 // Editor de la historia: solo título y video son obligatorios por capítulo; lo demás va en "Opcional".
-type Data = { title: string; description: string; minutes: number; cover: string | null; mission: { title: string; text: string; tips: string[] }; scenes: Scene[] }
+type Data = { title: string; description: string; minutes: number; cover: string | null; character_image: string | null; mission: { title: string; text: string; tips: string[] }; scenes: Scene[] }
 type Result = { errors: string[]; warnings: string[]; unpublished?: boolean; published?: boolean; scenes?: Scene[] }
 
 function CloudUpload({ kind, value, onChange, slug, cloud }: { kind: 'video' | 'image'; value: string | null | undefined; onChange: (id: string | null) => void; slug: string; cloud: string }) {
@@ -80,6 +80,9 @@ export function StoryEditor({ id, slug, published: pub0, cloud, initial }: { id:
       <h3>Datos generales</h3>
       <label htmlFor="t">Título *</label><input id="t" value={d.title} onChange={e => set({ title: e.target.value })} maxLength={160} />
       <label htmlFor="ds">Descripción *</label><textarea id="ds" value={d.description} onChange={e => set({ description: e.target.value })} rows={2} maxLength={600} />
+      <label>Imagen del personaje</label>
+      <p className="tag">Se muestra en la portada, la misión y el diploma. Recomendado: PNG cuadrado con fondo transparente. Sin imagen se usa Fantasmín.</p>
+      <CloudUpload kind="image" value={d.character_image} onChange={v => set({ character_image: v })} slug={slug} cloud={cloud} />
       <label htmlFor="mi">Duración (minutos)</label><input id="mi" type="number" min={1} max={60} value={d.minutes} onChange={e => set({ minutes: Number(e.target.value) })} />
       <details><summary>Misión de pintura</summary>
         <label htmlFor="mt">Título</label><input id="mt" value={d.mission.title} onChange={e => set({ mission: { ...d.mission, title: e.target.value } })} placeholder="¡Ahora empieza tu misión!" />

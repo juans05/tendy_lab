@@ -18,7 +18,7 @@ export async function loadStory(adventureId: string): Promise<Story> {
 const pid = z.string().trim().max(255)
 export const StoryInput = z.object({
   title: z.string().trim().min(1).max(160), description: z.string().trim().min(1).max(600),
-  minutes: z.coerce.number().int().min(1).max(60), cover: pid.nullish(),
+  minutes: z.coerce.number().int().min(1).max(60), cover: pid.nullish(), character_image: pid.nullish(),
   mission: z.object({ title: z.string().trim().max(120).optional(), text: z.string().trim().max(600).optional(), tips: z.array(z.string().trim().max(200)).max(8).optional() }),
   scenes: z.array(z.object({
     id: z.string().max(40), title: z.string().trim().max(160), video: pid, description: z.string().trim().max(1200).nullish(),
@@ -32,6 +32,16 @@ export async function saveStory(adventureId: string, input: StoryInput): Promise
   await tx(async c => {
     await c.query(`update adventures set title=$2,description=$3,minutes=$4,cover_public_id=$5,mission=$6,updated_at=now() where id=$1`,
       [adventureId, input.title, input.description, input.minutes, input.cover || null, input.mission])
+    // Imagen del personaje (portada, misión y diploma). Si la aventura no tiene personaje, se crea uno con su título.
+    if (input.character_image !== undefined) {
+      const [a] = (await c.query(`select character_id,collection_id,slug from adventures where id=$1`, [adventureId])).rows
+      if (a.character_id) await c.query(`update characters set image_public_id=$2 where id=$1`, [a.character_id, input.character_image || null])
+      else if (input.character_image) {
+        const ch = await c.query(`insert into characters(collection_id,slug,name,image_public_id) values($1,$2,$3,$4)
+          on conflict (slug) do update set image_public_id=excluded.image_public_id returning id`, [a.collection_id, `${a.slug}-personaje`, input.title, input.character_image])
+        await c.query(`update adventures set character_id=$2 where id=$1`, [adventureId, ch.rows[0].id])
+      }
+    }
     const own = new Set((await c.query(`select id from story_scenes where adventure_id=$1`, [adventureId])).rows.map(r => String(r.id)))
     const real = new Map<string, string>() // id del editor -> id en BD
     for (const [i, s] of input.scenes.entries()) {
