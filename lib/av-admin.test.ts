@@ -68,3 +68,14 @@ test('QR: apunta a /k/<código> del dominio configurado y sale en PNG 1024 y SVG
   assert.equal(m.format, 'png'); assert.equal(m.width, 1024)
   assert.match(await qrSvg(kitUrl('TP-7KQ9M2XA')), /^<svg/)
 })
+
+test('PIN: el reseteo cierra las sesiones de álbum abiertas de ese kit', opts, async () => {
+  const { generateBatch, resetPin } = await import('./av-admin')
+  const { createAlbumToken, kitForToken } = await import('./av-album')
+  const { q } = await import('./db')
+  const [code] = await generateBatch(await advId(), `lote-s-${Date.now()}`, 1)
+  const [k] = await q(`select id from qr_codes where code=$1`, [code])
+  const t = await createAlbumToken(String(k.id))
+  await resetPin(code)
+  assert.equal(await kitForToken(t), null)
+})

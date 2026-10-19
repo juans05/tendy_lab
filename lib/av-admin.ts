@@ -1,5 +1,5 @@
 import QRCode from 'qrcode'
-import { q } from './db'
+import { q, tx } from './db'
 import { hashPass } from './auth'
 import { newCode } from './av-codes'
 import { tempPin } from './av-pin'
@@ -23,10 +23,15 @@ export async function reassign(target: { batch?: string; code?: string }, advent
 }
 
 // PIN temporal: se muestra una sola vez al admin (para enviarlo por WhatsApp) y solo se guarda su hash.
+// También cierra las sesiones abiertas del kit: quien entró con el PIN anterior deja de ver las fotos.
 export async function resetPin(code: string): Promise<string | null> {
   const pin = tempPin()
-  const r = await q(`update qr_codes set pin_hash=$2,pin_fails=0,locked_until=null where code=$1 returning id`, [code, hashPass(pin)])
-  return r.length ? pin : null
+  return tx(async c => {
+    const r = await c.query(`update qr_codes set pin_hash=$2,pin_fails=0,locked_until=null where code=$1 returning id`, [code, hashPass(pin)])
+    if (!r.rowCount) return null
+    await c.query(`delete from album_sessions where qr_code_id=$1`, [r.rows[0].id])
+    return pin
+  })
 }
 
 // Aprobar para la galería exige el permiso "gallery" vigente de esa foto.

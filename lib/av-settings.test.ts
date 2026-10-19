@@ -4,14 +4,13 @@ import assert from 'node:assert/strict'
 
 const ON = process.env.TEST_DB === '1' && /localhost|127.0.0.1/.test(process.env.DATABASE_URL ?? '')
 
-test('aventuras: semilla de Fantasmín sin publicar y sin capítulos', { skip: !ON && 'requiere TEST_DB=1 y BD local' }, async () => {
+// La semilla se crea sin publicar y sin capítulos; en una BD ya usada el admin pudo editarla, por eso no se exige.
+test('aventuras: semilla de Fantasmín en Tendy Halloween con su misión', { skip: !ON && 'requiere TEST_DB=1 y BD local' }, async () => {
   const { q, migrate } = await import('./db')
   await migrate()
-  const [a] = await q(`select a.id,a.published,a.mission,c.slug as col from adventures a join collections c on c.id=a.collection_id where a.slug='fantasmin'`)
-  assert.equal(a.published, false)
+  const [a] = await q(`select a.id,a.mission,c.slug as col from adventures a join collections c on c.id=a.collection_id where a.slug='fantasmin'`)
   assert.equal(a.col, 'halloween')
   assert.equal(a.mission.title, '¡Ahora empieza tu misión!')
-  assert.equal((await q(`select count(*)::int n from story_scenes where adventure_id=$1`, [a.id]))[0].n, 0)
   await assert.rejects(q(`insert into adventures(slug,collection_id,title,description) values('mis-fotos',$1,'x','x')`, [(await q(`select id from collections where slug='halloween'`))[0].id]))
 })
 
