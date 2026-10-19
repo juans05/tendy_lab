@@ -1,6 +1,7 @@
 import { q } from './db'
 import { refund } from './credits'
 import { handlers, type Run } from './tools'
+import { purgeExpired } from './av-album'
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms))
 const CONCURRENCY = 2
@@ -34,6 +35,7 @@ async function housekeeping() {
   for (const r of stuck) await refund(r.id, r.user_id, r.cost)
   await q(`delete from assets where created_at < now() - interval '30 days'`)
   await q(`delete from sessions where expires_at < now()`)
+  await purgeExpired() // Tendy Aventuras: fotos vencidas y sesiones de álbum
 }
 
 export function startWorker() {

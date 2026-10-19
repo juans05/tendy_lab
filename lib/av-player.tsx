@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { nextOf, type Story } from './av-story'
 import { Ghost } from './av-ghost'
 import { Diploma } from './av-diploma'
+import { PhotoUpload } from './av-upload'
 
 // Reproductor de la aventura: todo corre en el celular con la historia completa (pocos KB), sin pedir nada por capítulo.
 // En los capítulos, video y image ya llegan como URL de Cloudinary.
@@ -11,11 +12,12 @@ export type PlayerAdventure = {
   slug: string; title: string; description: string; collection: string; character: string; minutes: number
   mission: { title?: string; text?: string; tips?: string[] }; characterImage?: string
 }
-type Phase = { at: 'cover' } | { at: 'scene'; id: string } | { at: 'mission' } | { at: 'diploma' } | { at: 'end' }
+type Phase = { at: 'cover' } | { at: 'scene'; id: string } | { at: 'mission' } | { at: 'upload' } | { at: 'diploma' } | { at: 'end' }
 export const WHATSAPP = 'https://wa.me/51907579197'
 
-export function Player({ adventure: a, story, code, kitsUrl, others }: {
+export function Player({ adventure: a, story, code, kitsUrl, others, upload }: {
   adventure: PlayerAdventure; story: Story; code: string | null; kitsUrl: string; others: { slug: string; title: string }[]
+  upload: { hasPin: boolean; maxMb: number; maxFiles: number } | null // null: sin código de kit o subidas pausadas
 }) {
   const [phase, setPhase] = useState<Phase>({ at: 'cover' })
   const [seen, setSeen] = useState<string[]>([])
@@ -58,8 +60,13 @@ export function Player({ adventure: a, story, code, kitsUrl, others }: {
     <p className="av-lead">{a.mission.text}</p>
     {!!a.mission.tips?.length && <ul className="av-tips">{a.mission.tips.map(t => <li key={t}>💡 {t}</li>)}</ul>}
     <Timer />
-    <button className="av-btn lg" onClick={() => go({ at: 'diploma' })}>Terminé mi creación</button>
+    <button className="av-btn lg" onClick={() => go({ at: code && upload ? 'upload' : 'diploma' })}>Terminé mi creación</button>
     <button className="av-btn ghost" onClick={() => first && toScene(first.id)}>🔁 Escuchar nuevamente</button>
+  </main>
+
+  if (phase.at === 'upload' && code && upload) return <main className="av">
+    <h1>¡Guarda este momento especial!</h1>
+    <PhotoUpload code={code} {...upload} onDone={() => go({ at: 'diploma' })} />
   </main>
 
   if (phase.at === 'diploma') return <main className="av">

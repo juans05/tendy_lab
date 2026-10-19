@@ -44,3 +44,20 @@
 .av-doc { text-align: left; align-items: stretch; }
 .av-doc h2 { font-size: 1.2rem; margin-top: 10px; }
 @media (prefers-reduced-motion: reduce) { .av-ghost, .av-choices { animation: none; } .av .av-btn { transition: none; } }
+.av-upload { width: 100%; display: grid; gap: 12px; text-align: left; }
+.av-upload label { margin: 0; color: var(--av-ink); font-weight: 700; }
+.av-adult { margin: 0; text-align: center; font-weight: 800; color: var(--av-purple); background: #efe6fa; border-radius: 12px; padding: 8px; }
+.av-file { display: block; text-align: center; padding: 22px 14px; border: 3px dashed var(--av-orange); border-radius: 18px; background: #fff3ea; cursor: pointer; font-size: 1.1rem; }
+.av-file input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.av-file:focus-within { outline: 3px solid var(--av-purple); }
+.av-upload .av-check { display: flex; gap: 10px; align-items: flex-start; font-weight: 500; line-height: 1.4; }
+.av-check input { width: 24px; height: 24px; flex: 0 0 24px; margin: 0; }
+.av-pin { font: 800 1.6rem var(--body); letter-spacing: .5em; text-align: center; max-width: 220px; justify-self: center; }
+.av-err { margin: 0; background: #fde8e4; color: #7a2216; border-radius: 12px; padding: 10px 12px; font-weight: 600; }
+.av-ok { margin: 0; background: #e8f5e9; color: #1c5a22; border-radius: 12px; padding: 12px; font-weight: 700; }
+.av-progress.light { background: #f1e6da; }
+.av-album { list-style: none; padding: 0; margin: 0; width: 100%; display: grid; gap: 18px; }
+.av-album > li { background: #fff; border: 2px solid #f1e6da; border-radius: 18px; padding: 12px; display: grid; gap: 8px; }
+.av-album img { width: 100%; border-radius: 12px; }
+.av-consents { list-style: none; padding: 0; margin: 0; text-align: left; display: grid; gap: 4px; }
+.av-consents li { display: flex; justify-content: space-between; align-items: center; }

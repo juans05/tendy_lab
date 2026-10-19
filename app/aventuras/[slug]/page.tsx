@@ -5,6 +5,7 @@ import { normalizeCode } from '@/lib/av-codes'
 import { loadStory } from '@/lib/av-story-db'
 import { imageUrl, videoUrl } from '@/lib/av-cloudinary'
 import { getSettings } from '@/lib/av-settings'
+import { mediaKey } from '@/lib/av-crypto'
 import { Player } from '@/lib/av-player'
 import '../aventuras.css'
 
@@ -27,11 +28,12 @@ export default async function Aventura({ params, searchParams }: Props) {
   const [a] = await load(slug)
   if (!a || (!a.published && !(preview && (await currentUser())?.is_admin))) notFound()
   const code = k ? normalizeCode(k) : null
-  const kit = code ? (await q(`select 1 from qr_codes where code=$1`, [code])).length > 0 : false
+  const [kit] = code ? await q<{ has_pin: boolean }>(`select pin_hash is not null as has_pin from qr_codes where code=$1`, [code]) : []
   const story = await loadStory(a.id)
   story.scenes = story.scenes.map(s => ({ ...s, video: videoUrl(s.video), image: s.image ? imageUrl(s.image) : null }))
   const others = await q<{ slug: string; title: string }>(`select slug,title from adventures where published and id<>$1 order by updated_at desc limit 6`, [a.id])
   const settings = await getSettings()
   return <Player story={story} code={kit ? code : null} kitsUrl={settings.kits_url} others={others}
+    upload={kit && settings.uploads_enabled && mediaKey() ? { hasPin: kit.has_pin, maxMb: settings.max_photo_mb, maxFiles: settings.max_photos_per_kit } : null}
     adventure={{ slug: a.slug, title: a.title, description: a.description, collection: a.collection, character: a.character ?? 'tu personaje', minutes: a.minutes, mission: a.mission, characterImage: a.character_image ? imageUrl(a.character_image, 400) : undefined }} />
 }
