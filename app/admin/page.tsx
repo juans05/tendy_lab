@@ -14,7 +14,7 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
   const stats = (await q(`select count(*) filter (where status='FAILED')::int failed, count(*)::int total from runs`))[0]
   return (
     <main className="wrap page">
-      <p><a href="/panel">Volver al panel</a></p>
+      <p><a href="/panel">Volver al panel</a> · <a href="/admin/aventuras">Tendy Aventuras</a></p>
       <h1>Admin</h1>
       <p className="tag">Análisis totales: {stats.total} · fallidos: {stats.failed}</p>
       {ok && <div className="ok">Monedas aplicadas.</div>}
