@@ -94,6 +94,76 @@ create table if not exists plan_weeks(
   n int not null, run_id bigint not null, start date not null, done int[] not null default '{}',
   unique(plan_id, n));
 `
+
+// Tendy Aventuras: cuentos en video por QR de kit. Fotos de niños cifradas (AES-256-GCM), nunca públicas.
+// Sin datos del niño ni del adulto: el par código de kit + PIN reemplaza a las cuentas.
+const AVENTURAS = `
+create table if not exists collections(
+  id bigserial primary key, slug text unique not null, name text not null,
+  theme jsonb not null default '{}', active boolean not null default true);
+create table if not exists characters(
+  id bigserial primary key, collection_id bigint not null references collections, slug text unique not null,
+  name text not null, image_public_id text, active boolean not null default true);
+create table if not exists adventures(
+  id bigserial primary key,
+  slug text unique not null check(slug ~ '^[a-z0-9-]+$' and slug not in ('mis-fotos','privacidad')),
+  collection_id bigint not null references collections, character_id bigint references characters,
+  title text not null, description text not null, cover_public_id text, minutes int not null default 5,
+  mission jsonb not null default '{}', published boolean not null default false,
+  updated_at timestamptz not null default now());
+create table if not exists story_scenes(
+  id bigserial primary key, adventure_id bigint not null references adventures on delete cascade,
+  title text not null, video_public_id text not null, description text, image_public_id text,
+  next_scene_id bigint references story_scenes on delete set null,
+  is_ending boolean not null default false, position int not null);
+create index if not exists story_scenes_adv on story_scenes(adventure_id, position);
+create table if not exists story_choices(
+  id bigserial primary key, scene_id bigint not null references story_scenes on delete cascade,
+  label text not null, next_scene_id bigint not null references story_scenes on delete cascade,
+  position int not null default 0);
+create index if not exists story_choices_scene on story_choices(scene_id);
+create table if not exists qr_codes(
+  id bigserial primary key, code text unique not null, adventure_id bigint not null references adventures,
+  batch text not null, pin_hash text, pin_fails int not null default 0, locked_until timestamptz,
+  created_at timestamptz not null default now());
+create index if not exists qr_codes_batch on qr_codes(batch);
+create table if not exists adventure_events(
+  id bigserial primary key, adventure_id bigint not null references adventures on delete cascade,
+  qr_code_id bigint references qr_codes on delete set null,
+  type text not null check(type in ('scan','start','complete','diploma','upload','whatsapp')),
+  created_at timestamptz not null default now());
+create index if not exists adventure_events_adv on adventure_events(adventure_id, created_at);
+create index if not exists adventure_events_qr on adventure_events(qr_code_id);
+create table if not exists media_files(
+  id uuid primary key default gen_random_uuid(), qr_code_id bigint not null references qr_codes on delete cascade,
+  mime text not null, bytes int not null, iv bytea not null, tag bytea not null, data bytea not null,
+  moderation text not null default 'pending' check(moderation in ('pending','approved','rejected')),
+  delete_after timestamptz not null, created_at timestamptz not null default now());
+create index if not exists media_files_qr on media_files(qr_code_id);
+create index if not exists media_files_expiry on media_files(delete_after);
+create table if not exists consent_records(
+  id bigserial primary key, qr_code_id bigint not null references qr_codes on delete cascade,
+  media_file_id uuid not null references media_files on delete cascade,
+  purpose text not null check(purpose in ('store','gallery','ads')), version text not null,
+  granted_at timestamptz not null default now(), revoked_at timestamptz);
+create index if not exists consent_records_media on consent_records(media_file_id);
+create table if not exists album_sessions(
+  token_hash text primary key, qr_code_id bigint not null references qr_codes on delete cascade,
+  expires_at timestamptz not null);
+create table if not exists av_settings(key text primary key, value jsonb not null);
+create table if not exists admin_audit(
+  id bigserial primary key, user_id bigint not null references users, action text not null, target text,
+  created_at timestamptz not null default now());
+insert into collections(slug,name,theme) values('halloween','Tendy Halloween','{"bg":"#461577"}') on conflict (slug) do nothing;
+insert into characters(collection_id,slug,name) select id,'fantasmin','Fantasmín' from collections where slug='halloween'
+  on conflict (slug) do nothing;
+insert into adventures(slug,collection_id,character_id,title,description,mission)
+  select 'fantasmin', c.id, ch.id, 'El misterio del fantasmita sin color',
+    'Algo extraño ocurrió en el bosque encantado. Fantasmín ha perdido sus colores y solamente un pequeño artista puede ayudarlo.',
+    '{"title":"¡Ahora empieza tu misión!","text":"Toma tu figura de yeso y utiliza tus pinturas para devolverle la magia a Fantasmín.","tips":["Pinta primero las partes grandes y luego los detalles.","Deja secar cada color antes de pintar el de al lado.","¡Inventa tus propios colores mágicos!"]}'
+  from collections c join characters ch on ch.slug='fantasmin' where c.slug='halloween'
+  on conflict (slug) do nothing;
+`
 let migration: Promise<void> | undefined
 export function migrate(): Promise<void> {
   // También al recargar este módulo en desarrollo: la instrumentación solo corre al iniciar.
@@ -105,5 +175,5 @@ export function migrate(): Promise<void> {
 async function applySchema() {
   const name = SCHEMA_NAME.replace(/"/g, '')
   if (name !== 'public') await pool.query(`create schema if not exists "${name}"`)
-  await pool.query(SCHEMA)
+  await pool.query(SCHEMA + AVENTURAS)
 }
