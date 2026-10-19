@@ -22,7 +22,8 @@ export function encrypt(data: Buffer, key?: Buffer): Sealed {
 }
 
 export function decrypt(e: Sealed, key?: Buffer): Buffer {
-  const d = createDecipheriv('aes-256-gcm', keyOrThrow(key), e.iv)
+  // Tag de 16 bytes exactos: GCM aceptaría uno recortado y eso facilita falsificar datos.
+  const d = createDecipheriv('aes-256-gcm', keyOrThrow(key), e.iv, { authTagLength: 16 })
   d.setAuthTag(e.tag)
   return Buffer.concat([d.update(e.data), d.final()])
 }

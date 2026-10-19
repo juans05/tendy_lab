@@ -29,3 +29,7 @@ test('cifrado: MEDIA_ENC_KEY ausente o corta no da clave', () => {
   process.env.MEDIA_ENC_KEY = key.toString('base64'); assert.deepEqual(mediaKey(), key)
   if (old === undefined) delete process.env.MEDIA_ENC_KEY; else process.env.MEDIA_ENC_KEY = old
 })
+test('cifrado: un tag recortado se rechaza (no se debilita GCM)', () => {
+  const e = encrypt(photo, key)
+  assert.throws(() => decrypt({ ...e, tag: e.tag.subarray(0, 4) }, key))
+})
