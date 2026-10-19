@@ -1,3 +1,4 @@
+import { requireAdmin } from '@/lib/auth'
 import { q } from '@/lib/db'
 
 const TYPES = ['scan', 'start', 'complete', 'diploma', 'upload', 'whatsapp'] as const
@@ -6,6 +7,7 @@ const cols = TYPES.map(t => `count(*) filter (where e.type='${t}')::int as ${t}`
 
 // Últimos 30 días, por aventura y por lote de QR.
 export default async function Resumen() {
+  await requireAdmin()
   const byAdv = await q(`select a.title,${cols} from adventures a left join adventure_events e on e.adventure_id=a.id and e.created_at>now()-interval '30 days' group by a.id order by a.id`)
   const byBatch = await q(`select k.batch,${cols} from adventure_events e join qr_codes k on k.id=e.qr_code_id where e.created_at>now()-interval '30 days' group by k.batch order by k.batch`)
   const [{ pending }] = await q(`select count(*)::int pending from media_files where moderation='pending'`)

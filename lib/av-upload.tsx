@@ -34,7 +34,7 @@ export function PhotoUpload({ code, hasPin, maxMb, maxFiles, onDone }: { code: s
   }
 
   if (saved) return <div className="av-upload">
-    <p className="av-ok">¡Foto guardada en privado! Solo ustedes pueden verla con el QR del kit y su PIN.</p>
+    <p className="av-ok">¡Foto guardada en privado! Ustedes la ven con el QR del kit y su PIN. No se publica: solo el equipo de TendyPeru puede revisarla para cuidar el contenido.</p>
     <a className="av-btn ghost" href={`/aventuras/mis-fotos?k=${code}`}>Ver mis fotos</a>
     <button className="av-btn" onClick={onDone}>Continuar</button>
   </div>
@@ -47,7 +47,7 @@ export function PhotoUpload({ code, hasPin, maxMb, maxFiles, onDone }: { code: s
     <label className="av-check"><input type="checkbox" name="store" required /> Soy el adulto responsable y autorizo guardar esta foto en privado.</label>
     <label className="av-check"><input type="checkbox" name="gallery" /> Opcional: autorizo mostrar la figura en la galería de manualidades de TendyPeru, sin rostros ni datos del niño.</label>
     <label className="av-check"><input type="checkbox" name="ads" /> Opcional: autorizo usar la foto en publicidad de TendyPeru.</label>
-    <label htmlFor="av-pin">{hasPin ? 'PIN de este kit' : 'Crea un PIN de 4 números para ver tus fotos después'}</label>
+    <label htmlFor="av-pin">{hasPin ? 'PIN de este kit' : 'Crea un PIN de 4 números para ver tus fotos después (evita 1234, 0000 o años)'}</label>
     <input id="av-pin" name="pin" inputMode="numeric" pattern="\d{4}" maxLength={4} required autoComplete={hasPin ? 'current-password' : 'new-password'} className="av-pin" />
     {error && <p className="av-err" role="alert">{error}</p>}
     {progress !== null ? <div className="av-progress light" role="progressbar" aria-valuenow={progress} aria-label="Subiendo"><span style={{ width: `${progress}%` }} /></div>

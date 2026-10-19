@@ -36,7 +36,7 @@ test('PIN: el reseteo da un PIN temporal que funciona y desbloquea el kit', opts
   const { q } = await import('./db')
   const [code] = await generateBatch(await advId(), `lote-p-${Date.now()}`, 1)
   const [k] = await q(`select id from qr_codes where code=$1`, [code])
-  await setPin(String(k.id), '1234')
+  await setPin(String(k.id), '4826')
   for (let i = 0; i < 20; i++) await verifyPin(code, '0000') // bloqueado hasta reset
   const temp = await resetPin(code)
   assert.match(temp!, /^\d{4}$/)

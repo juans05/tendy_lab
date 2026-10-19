@@ -13,4 +13,14 @@ export function afterFail(fails: number, now: Date): { pin_fails: number; locked
   return { pin_fails: n, locked_until: n % 5 === 0 ? new Date(now.getTime() + 15 * 60_000) : null }
 }
 
-export const tempPin = () => String(randomInt(10000)).padStart(4, '0')
+// PIN fáciles de adivinar (los primeros que prueba cualquiera): repetidos, escaleras, años y pares "1212".
+export function weakPin(pin: string) {
+  const d = [...pin].map(Number), step = d[1] - d[0]
+  return new Set(d).size === 1 || (Math.abs(step) === 1 && d.every((x, i) => !i || x - d[i - 1] === step))
+    || /^(19|20)\d\d$/.test(pin) || (pin[0] === pin[2] && pin[1] === pin[3])
+}
+
+export function tempPin(): string {
+  const pin = String(randomInt(10000)).padStart(4, '0')
+  return weakPin(pin) ? tempPin() : pin
+}

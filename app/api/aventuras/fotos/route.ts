@@ -3,6 +3,7 @@ import { normalizeCode } from '@/lib/av-codes'
 import { mediaKey } from '@/lib/av-crypto'
 import { sanitizeImage } from '@/lib/av-image'
 import { getSettings } from '@/lib/av-settings'
+import { weakPin } from '@/lib/av-pin'
 import { PIN_RE, savePhotos, setPin, startAlbumSession, verifyPin, type Purpose } from '@/lib/av-album'
 import { loginGuard } from '@/lib/login-guard'
 
@@ -10,9 +11,13 @@ import { loginGuard } from '@/lib/login-guard'
 const g = globalThis as any
 const perIp: ReturnType<typeof loginGuard> = (g.__avUploads ??= loginGuard(10, 3600_000))
 const fail = (status: number, error: string) => Response.json({ error }, { status })
+// Tope antes de leer el cuerpo: 3 fotos × 20 MB (máximo configurable) + margen del formulario.
+const MAX_BODY = (3 * 20 + 1) * 1024 * 1024
 
 export async function POST(req: Request) {
   if (!mediaKey()) return fail(503, 'Por ahora no podemos guardar fotos. Inténtalo más tarde.')
+  const size = Number(req.headers.get('content-length'))
+  if (!size || size > MAX_BODY) return fail(413, 'Las fotos pesan demasiado. Elige fotos más livianas.')
   const s = await getSettings()
   if (!s.uploads_enabled) return fail(403, 'La subida de fotos está pausada por el momento.')
   const ip = (req.headers.get('x-forwarded-for') ?? '').split(',').pop()!.trim()
@@ -33,6 +38,7 @@ export async function POST(req: Request) {
     if (v.status === 'locked') return fail(423, 'Demasiados intentos con el PIN. Espera 15 minutos o escríbenos por WhatsApp.')
     if (v.status !== 'ok') return fail(401, 'El PIN no es correcto.')
   }
+  if (!kit.has_pin && weakPin(pin)) return fail(400, 'Elige un PIN menos fácil de adivinar (evita 1234, 0000, 1212 o años).')
   let photos: Buffer[]
   try { photos = await Promise.all(files.map(async x => sanitizeImage(Buffer.from(await x.arrayBuffer()), s.max_photo_mb * 1024 * 1024))) }
   catch (e: any) { return fail(400, e.message === 'tamaño' ? `Cada foto puede pesar hasta ${s.max_photo_mb} MB.` : 'Solo aceptamos fotos JPG, PNG o WebP.') }

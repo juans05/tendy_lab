@@ -1,9 +1,11 @@
+import { requireAdmin } from '@/lib/auth'
 import { q } from '@/lib/db'
 
 const LABEL: Record<string, string> = { store: 'Guardar', gallery: 'Galería', ads: 'Publicidad' }
 const STATE: Record<string, string> = { pending: 'Por revisar', approved: 'Aprobada para galería', rejected: 'Rechazada' }
 
 export default async function Fotos({ searchParams }: { searchParams: Promise<{ ok?: string; e?: string; page?: string }> }) {
+  await requireAdmin()
   const { ok, e, page } = await searchParams
   const p = Math.max(0, Number(page) || 0)
   const rows = await q(`select m.id,m.moderation,m.created_at,k.batch,a.title,

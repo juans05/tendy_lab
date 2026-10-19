@@ -22,3 +22,9 @@ test('pin: el bloqueo respeta la hora', () => {
 test('pin: el temporal son 4 dígitos', () => {
   for (let i = 0; i < 100; i++) assert.match(tempPin(), /^\d{4}$/)
 })
+test('pin: los triviales no se aceptan al crearlo', async () => {
+  const { weakPin } = await import('./av-pin')
+  for (const p of ['0000', '1111', '9999', '1234', '4321', '0123', '9876', '1990', '2015', '2026', '1212'])
+    assert.equal(weakPin(p), true, p)
+  for (const p of ['4826', '7351', '2468', '5094']) assert.equal(weakPin(p), false, p)
+})

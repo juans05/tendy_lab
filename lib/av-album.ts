@@ -2,7 +2,7 @@ import { createHash, randomBytes } from 'node:crypto'
 import { cookies } from 'next/headers'
 import { q, tx } from './db'
 import { checkPass, hashPass } from './auth'
-import { afterFail, pinLocked } from './av-pin'
+import { afterFail, pinLocked, weakPin } from './av-pin'
 import { decrypt, encrypt } from './av-crypto'
 import type { AvSettings } from './av-settings'
 
@@ -13,6 +13,7 @@ export const PIN_RE = /^\d{4}$/
 
 // Solo crea el PIN si el kit aún no tiene uno: nadie puede pisar el PIN del comprador.
 export async function setPin(kitId: string, pin: string) {
+  if (!PIN_RE.test(pin) || weakPin(pin)) return false
   return (await q(`update qr_codes set pin_hash=$2,pin_fails=0,locked_until=null where id=$1 and pin_hash is null returning id`, [kitId, hashPass(pin)])).length > 0
 }
 

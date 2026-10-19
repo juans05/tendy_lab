@@ -1,6 +1,8 @@
+import { requireAdmin } from '@/lib/auth'
 import { getSettings } from '@/lib/av-settings'
 
 export default async function Ajustes({ searchParams }: { searchParams: Promise<{ ok?: string; e?: string }> }) {
+  await requireAdmin()
   const { ok, e } = await searchParams
   const s = await getSettings()
   return <form className="form" method="post" action="/api/admin/aventuras/ajustes">

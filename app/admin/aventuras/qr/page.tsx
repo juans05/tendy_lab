@@ -1,9 +1,11 @@
+import { requireAdmin } from '@/lib/auth'
 import { q } from '@/lib/db'
 import { ResetPin } from '@/lib/av-reset-pin'
 
 const ERR: Record<string, string> = { aventura: 'Elige una aventura.', lote: 'Pon un nombre de lote y una cantidad entre 1 y 1000.', nada: 'No se encontró ese código o lote.' }
 
 export default async function Qr({ searchParams }: { searchParams: Promise<{ ok?: string; e?: string; moved?: string }> }) {
+  await requireAdmin()
   const { ok, e, moved } = await searchParams
   const advs = await q(`select id,slug,title from adventures order by id desc`)
   const batches = await q(`select k.batch,a.title,count(*)::int n,count(k.pin_hash)::int with_pin,min(k.created_at) as created

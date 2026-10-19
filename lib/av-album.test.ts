@@ -21,20 +21,20 @@ const photo = Buffer.from('foto')
 test('álbum: el PIN se crea una sola vez y luego se verifica', opts, async () => {
   const { setPin, verifyPin } = await import('./av-album')
   const k = await kit()
-  assert.equal((await verifyPin(k.code, '1234')).status, 'nopin')
-  assert.equal(await setPin(k.id, '1234'), true)
-  assert.equal(await setPin(k.id, '9999'), false) // nadie pisa un PIN ya creado
-  assert.equal((await verifyPin(k.code, '9999')).status, 'bad')
-  assert.deepEqual(await verifyPin(k.code, '1234'), { status: 'ok', kitId: k.id })
-  assert.equal((await verifyPin('TP-22222222', '1234')).status, 'nokit')
+  assert.equal((await verifyPin(k.code, '4826')).status, 'nopin')
+  assert.equal(await setPin(k.id, '4826'), true)
+  assert.equal(await setPin(k.id, '7351'), false) // nadie pisa un PIN ya creado
+  assert.equal((await verifyPin(k.code, '7351')).status, 'bad')
+  assert.deepEqual(await verifyPin(k.code, '4826'), { status: 'ok', kitId: k.id })
+  assert.equal((await verifyPin('TP-22222222', '4826')).status, 'nokit')
 })
 
 test('álbum: 5 PIN errados bloquean aunque luego llegue el correcto', opts, async () => {
   const { setPin, verifyPin } = await import('./av-album')
   const k = await kit()
-  await setPin(k.id, '1234')
+  await setPin(k.id, '4826')
   for (let i = 0; i < 5; i++) assert.equal((await verifyPin(k.code, '0000')).status, 'bad')
-  assert.equal((await verifyPin(k.code, '1234')).status, 'locked')
+  assert.equal((await verifyPin(k.code, '4826')).status, 'locked')
 })
 
 test('álbum: dos subidas simultáneas no superan el tope de 3 fotos', opts, async () => {
@@ -98,4 +98,11 @@ test('álbum: la purga borra fotos vencidas y sesiones expiradas, no las vigente
   assert.deepEqual((await q(`select id from media_files where qr_code_id=$1`, [k.id])).map(r => r.id), [fresh])
   assert.equal(await kitForToken(t), null)
   assert.equal((await q(`select count(*)::int n from album_sessions where token_hash is not null and expires_at<now()`))[0].n, 0)
+})
+
+test('álbum: un PIN trivial no se puede crear', opts, async () => {
+  const { setPin } = await import('./av-album')
+  const k = await kit()
+  assert.equal(await setPin(k.id, '1234'), false)
+  assert.equal(await setPin(k.id, '4826'), true)
 })

@@ -1,8 +1,10 @@
+import { requireAdmin } from '@/lib/auth'
 import { q } from '@/lib/db'
 import { kitUrl, qrSvg } from '@/lib/av-admin'
 
 // Hoja para imprimir (el navegador la guarda como PDF). Sin el código en texto: solo el QR.
 export default async function Imprimir({ searchParams }: { searchParams: Promise<{ batch?: string }> }) {
+  await requireAdmin()
   const batch = (await searchParams).batch ?? ''
   const codes = await q<{ code: string; title: string }>(`select k.code,a.title from qr_codes k join adventures a on a.id=k.adventure_id where k.batch=$1 order by k.id`, [batch])
   const svgs = await Promise.all(codes.map(c => qrSvg(kitUrl(c.code))))

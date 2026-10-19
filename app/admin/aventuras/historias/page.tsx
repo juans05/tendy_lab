@@ -1,8 +1,10 @@
+import { requireAdmin } from '@/lib/auth'
 import { q } from '@/lib/db'
 
 const ERR: Record<string, string> = { datos: 'Falta el título o el slug no es válido.', coleccion: 'Elige o crea una colección.', slug: 'Ya existe una aventura con ese slug.' }
 
 export default async function Historias({ searchParams }: { searchParams: Promise<{ e?: string }> }) {
+  await requireAdmin()
   const { e } = await searchParams
   const list = await q(`select a.id,a.slug,a.title,a.published,c.name as collection,(select count(*)::int from story_scenes s where s.adventure_id=a.id) as scenes
     from adventures a join collections c on c.id=a.collection_id order by a.id desc`)

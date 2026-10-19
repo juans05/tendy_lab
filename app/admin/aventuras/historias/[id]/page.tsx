@@ -1,9 +1,11 @@
+import { requireAdmin } from '@/lib/auth'
 import { notFound } from 'next/navigation'
 import { q } from '@/lib/db'
 import { loadStory } from '@/lib/av-story-db'
 import { StoryEditor } from '@/lib/av-scene-editor'
 
 export default async function Editor({ params }: { params: Promise<{ id: string }> }) {
+  await requireAdmin()
   const { id } = await params
   if (!/^\d+$/.test(id)) notFound()
   const [a] = await q(`select id,slug,title,description,minutes,cover_public_id,mission,published from adventures where id=$1`, [id])

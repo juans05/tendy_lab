@@ -13,7 +13,7 @@ export default async function Privacidad() {
     <h2>El cuento no pide datos</h2>
     <p>Escuchar la historia, hacer la misión y descargar el diploma no requiere registro. No pedimos el nombre del niño, su colegio, su dirección ni su ubicación. El nombre que se escribe en el diploma se usa solo en el celular y no se envía a nuestros servidores.</p>
     <h2>Fotos de la creación (solo adultos)</h2>
-    <p>El padre, madre o tutor puede guardar hasta {s.max_photos_per_kit} fotos de la figura pintada usando el QR de su kit y un PIN de 4 dígitos. Las fotos se guardan cifradas, sin metadatos de ubicación, y solo se ven con el QR del kit y el PIN. Nunca se publican automáticamente.</p>
+    <p>El padre, madre o tutor puede guardar hasta {s.max_photos_per_kit} fotos de la figura pintada usando el QR de su kit y un PIN de 4 dígitos. Las fotos se guardan cifradas, sin metadatos de ubicación. La familia las ve con el QR del kit y el PIN; además, el equipo autorizado de TendyPeru puede revisarlas para moderar el contenido y atender pedidos de borrado. Nunca se publican automáticamente.</p>
     <h2>Permisos separados</h2>
     <ul>
       <li><b>Guardar en privado</b> (obligatorio para subir): guardamos la foto para que la vean ustedes.</li>
