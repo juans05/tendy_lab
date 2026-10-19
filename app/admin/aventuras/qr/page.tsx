@@ -27,13 +27,13 @@ export default async function Qr({ searchParams }: { searchParams: Promise<{ ok?
       <button>Generar</button>
     </form>
     <h2>Lotes</h2>
-    <div className="scroll"><table><thead><tr><th>Lote</th><th>Aventura</th><th>Códigos</th><th>Con fotos (PIN)</th><th></th></tr></thead><tbody>
-      {batches.map(b => <tr key={b.batch + b.title}><td>{b.batch}</td><td>{b.title}</td><td>{b.n}</td><td>{b.with_pin}</td>
-        <td><a href={`/admin/aventuras/qr/imprimir?batch=${encodeURIComponent(b.batch)}`}>Imprimir / descargar</a></td></tr>)}
+    <div className="scroll"><table className="av-table"><thead><tr><th>Lote</th><th>Aventura</th><th>Códigos</th><th>Con fotos (PIN)</th><th></th></tr></thead><tbody>
+      {batches.map(b => <tr key={b.batch + b.title}><td data-label="Lote"><b>{b.batch}</b></td><td data-label="Aventura">{b.title}</td><td data-label="Códigos">{b.n}</td><td data-label="Con fotos (PIN)">{b.with_pin}</td>
+        <td data-label=""><a className="av-btnlink" href={`/admin/aventuras/qr/imprimir?batch=${encodeURIComponent(b.batch)}`}>Imprimir / descargar</a></td></tr>)}
     </tbody></table></div>
     <h2>QR general por aventura</h2>
     <p className="tag">Abre el cuento sin código de kit (para redes, tienda o empaque exterior). No permite subir fotos.</p>
-    <ul>{advs.map(a => <li key={a.id}>{a.title}: <a href={`/api/admin/aventuras/qr/a-${a.slug}`}>PNG</a> · <a href={`/api/admin/aventuras/qr/a-${a.slug}?format=svg`}>SVG</a></li>)}</ul>
+    <ul className="av-glist">{advs.map(a => <li key={a.id}><span>{a.title}</span><span><a className="av-btnlink" href={`/api/admin/aventuras/qr/a-${a.slug}`}>PNG</a><a className="av-btnlink" href={`/api/admin/aventuras/qr/a-${a.slug}?format=svg`}>SVG</a></span></li>)}</ul>
     <form className="form" method="post" action="/api/admin/aventuras/qr">
       <h3>Reasignar a otra aventura</h3>
       <p className="tag">Los QR impresos no cambian: solo cambia la historia que abren.</p>

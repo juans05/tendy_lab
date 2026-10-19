@@ -30,6 +30,6 @@ export default async function Fotos({ searchParams }: { searchParams: Promise<{ 
           {r.moderation !== 'rejected' && btn(r.id, 'rejected', 'Rechazar')}{btn(r.id, 'delete', 'Borrar')}</div>
       </div>)}
     </div>
-    <p>{p > 0 && <a href={`?page=${p - 1}`}>← Anteriores</a>} {rows.length === 50 && <a href={`?page=${p + 1}`}>Siguientes →</a>}</p>
+    <p>{p > 0 && <a className="av-btnlink" href={`?page=${p - 1}`}>← Anteriores</a>} {rows.length === 50 && <a className="av-btnlink" href={`?page=${p + 1}`}>Siguientes →</a>}</p>
   </>
 }

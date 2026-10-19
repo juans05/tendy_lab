@@ -15,7 +15,7 @@ export default async function Imprimir({ searchParams }: { searchParams: Promise
     <div className="no-print">
       <h2>Lote «{batch}» · {codes.length} códigos</h2>
       <p className="tag">Usa Imprimir del navegador (Ctrl+P) y elige «Guardar como PDF». Recomendado: QR dentro del empaque.</p>
-      <details><summary>Descargar uno por uno (PNG / SVG)</summary><ul>{codes.map(c => <li key={c.code}>{c.code}: <a href={`/api/admin/aventuras/qr/${c.code}`}>PNG</a> · <a href={`/api/admin/aventuras/qr/${c.code}?format=svg`}>SVG</a></li>)}</ul></details>
+      <details><summary>Descargar uno por uno (PNG / SVG)</summary><ul className="av-glist">{codes.map(c => <li key={c.code}><span>{c.code}</span><span><a className="av-btnlink" href={`/api/admin/aventuras/qr/${c.code}`}>PNG</a><a className="av-btnlink" href={`/api/admin/aventuras/qr/${c.code}?format=svg`}>SVG</a></span></li>)}</ul></details>
     </div>
     <div className="qr-sheet">{svgs.map((s, i) => <figure key={codes[i].code}><img src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(s)}`} alt={`QR del kit ${i + 1}`} /><figcaption>Escanéame · Tendy Aventuras</figcaption></figure>)}</div>
   </>

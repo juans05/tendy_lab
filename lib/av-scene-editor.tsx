@@ -175,7 +175,7 @@ const CSS = `
 .ed-n{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--orange);color:var(--ink);font-size:.85rem;font-weight:800}
 .ed-inline{display:flex;align-items:center;gap:8px}.ed-inline input{max-width:90px}
 .ed-split{display:grid;grid-template-columns:260px 1fr;gap:14px;align-items:start}
-@media(max-width:760px){.ed-split{grid-template-columns:1fr}}
+@media(max-width:760px){.ed-split{grid-template-columns:1fr}.ed-list{position:static}.ed-bar .ed-actions{width:100%}.ed-bar .ed-actions>*{flex:1;justify-content:center;white-space:nowrap;padding:9px 8px}}
 .ed-list{display:grid;gap:6px;position:sticky;top:70px}
 .ed-list button{display:flex;align-items:center;gap:10px;margin:0;padding:10px 12px;background:#fff;color:var(--ink);border:1px solid var(--line);border-radius:12px;text-align:left;font-weight:600}
 .ed-list button:hover{background:var(--soft);color:var(--ink);border-color:var(--orange)}
@@ -184,7 +184,7 @@ const CSS = `
 .ed-t{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ed-ok{color:var(--ok)}.ed-warn{color:var(--bad)}
 .ed-list .ed-add{justify-content:center;border-style:dashed;color:var(--orange-dark)}
 .ed-scene-head{display:flex;justify-content:space-between;align-items:center}.ed-scene-head small{font-weight:500;color:var(--muted)}
-.ed-scene-head button{margin:0 4px;font-size:1.1rem}.ed-del{color:var(--bad)!important}
+.ed-scene-head button{margin:0 2px;font-size:1.1rem;min-width:40px;min-height:40px}.ed-del{color:var(--bad)!important}
 .ed-upload{display:grid;gap:8px;justify-items:start}.ed-upload video,.ed-upload img{width:100%;max-width:420px;border-radius:12px;background:#000}
 .ed-upload img{background:repeating-conic-gradient(#eee 0 25%,#fff 0 50%) 0 0/16px 16px;max-width:200px}
 .ed-pick{position:relative;display:inline-flex;align-items:center;gap:6px;margin:0;padding:12px 18px;border:2px dashed var(--orange);border-radius:12px;background:var(--soft);color:var(--orange-dark);font-weight:800;cursor:pointer}
@@ -198,7 +198,7 @@ const CSS = `
 .ed-modes small{display:block;color:var(--muted);font-size:.82rem}
 .ed-choices{display:grid;gap:8px;background:var(--soft);border-radius:12px;padding:12px}
 .ed-choice{display:grid;grid-template-columns:1fr auto 1fr auto;gap:8px;align-items:center}
-@media(max-width:600px){.ed-choice{grid-template-columns:1fr}}
-.ed-more{margin-top:16px}.ed-more summary{cursor:pointer;font-weight:700;color:var(--navy)}
+@media(max-width:600px){.ed-choice{grid-template-columns:1fr;border-bottom:1px dashed var(--line);padding-bottom:8px}.ed-choice>span{display:none}}
+.ed-card button.link{min-height:40px}.ed-more{margin-top:16px}.ed-more summary{cursor:pointer;font-weight:700;color:var(--navy)}
 .ed-empty{text-align:center}
 `
