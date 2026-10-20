@@ -38,3 +38,10 @@ test('tarjeta: el diseño de Halloween incluido sale con el QR en su recuadro', 
   const out = await composeCard(readFileSync(templateFor({ print_template: null, collection_slug: 'halloween' })!.source), 'https://tendyperu.com/k/TP-7KQ9M2XA', DEFAULT_QR)
   assert.deepEqual([(await sharp(out).metadata()).width, (await sharp(out).metadata()).height], [1128, 1600])
 })
+
+test('lotes: se intercalan para que cada hoja lleve uno de cada lote', async () => {
+  const { interleave } = await import('./av-card')
+  assert.deepEqual(interleave([['F1', 'F2', 'F3'], ['B1', 'B2']]), ['F1', 'B1', 'F2', 'B2', 'F3'])
+  assert.deepEqual(interleave([['A1', 'A2']]), ['A1', 'A2'])
+  assert.deepEqual(interleave([]), [])
+})

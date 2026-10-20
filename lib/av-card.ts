@@ -36,3 +36,10 @@ export function templateFor(a: { print_template: string | null; collection_slug:
   const file = join(process.cwd(), 'public', 'tarjetas', `${a.collection_slug}.jpg`)
   return existsSync(file) ? { url: `/tarjetas/${a.collection_slug}.jpg`, source: file } : null
 }
+
+// Varios lotes en una impresión: se intercalan (uno de cada lote por turno) para que cada hoja A4 lleve uno de cada.
+export function interleave<T>(groups: T[][]): T[] {
+  const n = Math.max(0, ...groups.map(g => g.length))
+  return Array.from({ length: n }, (_, i) => groups.flatMap(g => i < g.length ? [g[i]] : []))
+    .flat()
+}

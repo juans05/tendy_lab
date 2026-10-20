@@ -27,10 +27,14 @@ export default async function Qr({ searchParams }: { searchParams: Promise<{ ok?
       <button>Generar</button>
     </form>
     <h2>Lotes</h2>
-    <div className="scroll"><table className="av-table"><thead><tr><th>Lote</th><th>Aventura</th><th>Códigos</th><th>Con fotos (PIN)</th><th></th></tr></thead><tbody>
-      {batches.map(b => <tr key={b.batch + b.title}><td data-label="Lote"><b>{b.batch}</b></td><td data-label="Aventura">{b.title}</td><td data-label="Códigos">{b.n}</td><td data-label="Con fotos (PIN)">{b.with_pin}</td>
+    <form method="get" action="/admin/aventuras/qr/imprimir">
+    <p className="tag">Marca uno o varios lotes y pulsa «Imprimir seleccionados»: sus tarjetas salen intercaladas, 2 por hoja A4 (una de cada lote).</p>
+    <div className="scroll"><table className="av-table"><thead><tr><th>Imprimir</th><th>Lote</th><th>Aventura</th><th>Códigos</th><th>Con fotos (PIN)</th><th></th></tr></thead><tbody>
+      {batches.map(b => <tr key={b.batch + b.title}><td data-label="Imprimir"><input type="checkbox" name="batch" value={b.batch} aria-label={`Imprimir lote ${b.batch}`} style={{ width: 24, height: 24, margin: 0 }} /></td><td data-label="Lote"><b>{b.batch}</b></td><td data-label="Aventura">{b.title}</td><td data-label="Códigos">{b.n}</td><td data-label="Con fotos (PIN)">{b.with_pin}</td>
         <td data-label=""><a className="av-btnlink" href={`/admin/aventuras/qr/imprimir?batch=${encodeURIComponent(b.batch)}`}>Imprimir / descargar</a></td></tr>)}
     </tbody></table></div>
+    <div style={{ position: 'sticky', bottom: 0, background: 'var(--cream)', padding: '8px 0', borderTop: '1px solid var(--line)' }}><button style={{ marginTop: 0 }}>🖨 Imprimir seleccionados</button></div>
+    </form>
     <h2>QR general por aventura</h2>
     <p className="tag">Abre el cuento sin código de kit (para redes, tienda o empaque exterior). No permite subir fotos.</p>
     <ul className="av-glist">{advs.map(a => <li key={a.id}><span>{a.title}</span><span><a className="av-btnlink" href={`/api/admin/aventuras/qr/a-${a.slug}`}>PNG</a><a className="av-btnlink" href={`/api/admin/aventuras/qr/a-${a.slug}?format=svg`}>SVG</a></span></li>)}</ul>

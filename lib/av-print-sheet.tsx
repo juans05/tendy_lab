@@ -4,7 +4,7 @@ import { useState } from 'react'
 
 // Hoja de impresión: se marcan las tarjetas que se quieren y salen de 1, 2 o 4 por hoja (por defecto 2 en una A4).
 // La tarjeta tiene proporción A5: 1 = hoja A5, 2 = A4 horizontal (dos A5), 4 = A4 vertical (cuatro A6).
-export type PrintCard = { code: string; title: string; tpl: string | null; qr: string; pos: { x: number; y: number; size: number } }
+export type PrintCard = { code: string; batch: string; title: string; tpl: string | null; qr: string; pos: { x: number; y: number; size: number } }
 const LAYOUT = { 1: { page: 'A5 portrait', w: 148, h: 210, label: '1 (A5)' }, 2: { page: 'A4 landscape', w: 148.5, h: 210, label: '2 (A4)' }, 4: { page: 'A4 portrait', w: 105, h: 148.5, label: '4 (A4, tamaño A6)' } } as const
 type Per = keyof typeof LAYOUT
 
@@ -46,7 +46,7 @@ export function PrintSheet({ cards }: { cards: PrintCard[] }) {
     </div>
     <div className="ps-all no-print">{cards.map((c, i) => <label key={c.code} className={`ps-pick ${sel.has(c.code) ? 'on' : 'off'}`}>
       <input type="checkbox" checked={sel.has(c.code)} onChange={() => toggle(c.code)} aria-label={`Imprimir tarjeta ${i + 1}`} />
-      <div className="ps-card">{card(c, i)}</div><div className="ps-code">Kit {i + 1}</div>
+      <div className="ps-card">{card(c, i)}</div><div className="ps-code">{c.batch} · kit {cards.slice(0, i + 1).filter(x => x.batch === c.batch).length}</div>
     </label>)}</div>
     <div className="ps-sheet">{pages.map((pg, p) => <div className="ps-page" key={p}>
       {pg.map(c => <div className="ps-card" key={c.code}>{card(c, cards.indexOf(c))}</div>)}</div>)}</div>
