@@ -17,10 +17,12 @@ const load = (slug: string) => q(`select a.*,c.name as collection,ch.name as cha
   from adventures a join collections c on c.id=a.collection_id left join characters ch on ch.id=a.character_id where a.slug=$1`, [slug])
 
 export async function generateMetadata({ params, searchParams }: Props) {
-  const { slug } = await params, { k } = await searchParams
+  const { slug } = await params, { k, preview } = await searchParams
   const [a] = /^[a-z0-9-]+$/.test(slug) ? await load(slug) : []
   // Con código de kit en la URL no se indexa: el enlace pertenece a un kit.
-  return { title: a ? `${a.title} · Tendy Aventuras` : 'Tendy Aventuras', description: a?.description, robots: k || !a?.published ? { index: false, follow: false } : undefined, alternates: { canonical: `/aventuras/${slug}` } }
+  // Un borrador no revela título ni descripción (salvo al admin en vista previa).
+  const show = a?.published || (preview && (await currentUser())?.is_admin)
+  return { title: show ? `${a.title} · Tendy Aventuras` : 'Tendy Aventuras', description: show ? a.description : undefined, robots: k || !a?.published ? { index: false, follow: false } : undefined, alternates: { canonical: `/aventuras/${slug}` } }
 }
 
 export default async function Aventura({ params, searchParams }: Props) {
@@ -28,11 +30,10 @@ export default async function Aventura({ params, searchParams }: Props) {
   if (!/^[a-z0-9-]+$/.test(slug)) notFound()
   const [a] = await load(slug)
   if (!a) notFound()
-  // Sin publicar: quien escanea su kit ve un aviso amable (sin datos de la historia), no un 404.
+  // Sin publicar: quien escanea su kit ve un aviso amable y genérico (nada del borrador), no un 404.
   if (!a.published && !(preview && (await currentUser())?.is_admin)) return <main className="av av-night">
     <header className="av-top"><span className="av-logo">TendyPeru</span></header>
-    <p className="av-eyebrow">{a.collection}</p>
-    <Ghost src={a.character_image ? imageUrl(a.character_image, 400) : undefined} size={170} />
+    <Ghost size={170} />
     <h1>¡Tu aventura está casi lista!</h1>
     <p className="av-lead">Estamos preparando esta historia. Vuelve a escanear el QR de tu kit muy pronto.</p>
     <a className="av-btn" href="https://wa.me/51907579197" target="_blank" rel="noopener">💬 Escríbenos por WhatsApp</a>
