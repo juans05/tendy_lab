@@ -154,6 +154,8 @@ create table if not exists av_settings(key text primary key, value jsonb not nul
 create table if not exists admin_audit(
   id bigserial primary key, user_id bigint not null references users, action text not null, target text,
   created_at timestamptz not null default now());
+alter table adventures add column if not exists print_template text;
+alter table adventures add column if not exists print_qr jsonb not null default '{"x":76.6,"y":83.5,"size":19.4}';
 insert into collections(slug,name,theme) values('halloween','Tendy Halloween','{"bg":"#461577"}') on conflict (slug) do nothing;
 insert into characters(collection_id,slug,name) select id,'fantasmin','Fantasmín' from collections where slug='halloween'
   on conflict (slug) do nothing;

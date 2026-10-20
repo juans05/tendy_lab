@@ -18,7 +18,8 @@ export async function loadStory(adventureId: string): Promise<Story> {
 const pid = z.string().trim().max(255)
 export const StoryInput = z.object({
   title: z.string().trim().min(1).max(160), description: z.string().trim().min(1).max(600),
-  minutes: z.coerce.number().int().min(1).max(60), cover: pid.nullish(), character_image: pid.nullish(),
+  minutes: z.coerce.number().int().min(1).max(60), cover: pid.nullish(), character_image: pid.nullish(), print_template: pid.nullish(),
+  print_qr: z.object({ x: z.number().min(0).max(100), y: z.number().min(0).max(100), size: z.number().min(5).max(60) }).optional(),
   mission: z.object({ title: z.string().trim().max(120).optional(), text: z.string().trim().max(600).optional(), tips: z.array(z.string().trim().max(200)).max(8).optional() }),
   scenes: z.array(z.object({
     id: z.string().max(40), title: z.string().trim().max(160), video: pid, description: z.string().trim().max(1200).nullish(),
@@ -32,6 +33,9 @@ export async function saveStory(adventureId: string, input: StoryInput): Promise
   await tx(async c => {
     await c.query(`update adventures set title=$2,description=$3,minutes=$4,cover_public_id=$5,mission=$6,updated_at=now() where id=$1`,
       [adventureId, input.title, input.description, input.minutes, input.cover || null, input.mission])
+    // Tarjeta para imprimir: plantilla de la aventura y dónde va el QR.
+    if (input.print_template !== undefined) await c.query(`update adventures set print_template=$2 where id=$1`, [adventureId, input.print_template || null])
+    if (input.print_qr) await c.query(`update adventures set print_qr=$2 where id=$1`, [adventureId, input.print_qr])
     // Imagen del personaje (portada, misión y diploma). Si la aventura no tiene personaje, se crea uno con su título.
     if (input.character_image !== undefined) {
       const [a] = (await c.query(`select character_id,collection_id,slug from adventures where id=$1`, [adventureId])).rows

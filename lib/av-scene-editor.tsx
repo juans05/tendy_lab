@@ -6,7 +6,7 @@ import { applyEndMode, endMode, type EndMode } from './av-editor-modes'
 
 // Editor de la historia: barra fija con guardar/publicar, lista de capítulos a la izquierda y el capítulo
 // elegido a la derecha. Por capítulo solo título y video son obligatorios; el final se decide con una sola pregunta.
-type Data = { title: string; description: string; minutes: number; cover: string | null; character_image: string | null; mission: { title: string; text: string; tips: string[] }; scenes: Scene[] }
+type Data = { title: string; description: string; minutes: number; cover: string | null; character_image: string | null; print_template: string | null; print_qr: { x: number; y: number; size: number }; mission: { title: string; text: string; tips: string[] }; scenes: Scene[] }
 type Result = { errors: string[]; warnings: string[]; unpublished?: boolean; published?: boolean; scenes?: Scene[] }
 
 const MODES: { mode: EndMode; label: string; help: string }[] = [
@@ -116,6 +116,23 @@ export function StoryEditor({ id, slug, published: pub0, cloud, initial }: { id:
       </section>
     </div>
 
+    <section className="ed-card ed-print"><h3><span className="ed-n">5</span> Tarjeta para imprimir (QR del kit)</h3>
+      <p className="tag">Sube el diseño de la tarjeta. Al imprimir un lote, el QR de cada kit se pone solo en el recuadro. Ajusta la posición si tu diseño lo tiene en otro lugar.</p>
+      <div className="ed-print-grid">
+        <div>
+          <CloudUpload kind="image" label="Subir diseño de la tarjeta" value={d.print_template} onChange={v => set({ print_template: v })} slug={slug} cloud={cloud} />
+          {([['x', 'Horizontal', 0, 95], ['y', 'Vertical', 0, 95], ['size', 'Tamaño del QR', 5, 60]] as const).map(([k, l, min, max]) =>
+            <label key={k} className="ed-range">{l} <b>{d.print_qr[k]}%</b>
+              <input type="range" min={min} max={max} step={0.1} value={d.print_qr[k]} onChange={e => set({ print_qr: { ...d.print_qr, [k]: Number(e.target.value) } })} /></label>)}
+          <button type="button" className="link" onClick={() => set({ print_qr: { x: 76.6, y: 83.5, size: 19.4 } })}>Volver a la posición de la plantilla Halloween</button>
+        </div>
+        {d.print_template && <div className="ed-card-preview" aria-label="Vista previa de la tarjeta">
+          <img src={`https://res.cloudinary.com/${cloud}/image/upload/q_auto,f_auto,w_600/${d.print_template}`} alt="" />
+          <img className="ed-qr" src={`/api/admin/aventuras/qr/a-${slug}?format=svg`} alt="QR de ejemplo" style={{ left: `${d.print_qr.x}%`, top: `${d.print_qr.y}%`, width: `${d.print_qr.size}%` }} />
+        </div>}
+      </div>
+    </section>
+
     <h3 className="ed-h"><span className="ed-n">4</span> Capítulos</h3>
     <div className="ed-split">
       <nav className="ed-list" aria-label="Capítulos">
@@ -201,4 +218,9 @@ const CSS = `
 @media(max-width:600px){.ed-choice{grid-template-columns:1fr;border-bottom:1px dashed var(--line);padding-bottom:8px}.ed-choice>span{display:none}}
 .ed-card button.link{min-height:40px}.ed-more{margin-top:16px}.ed-more summary{cursor:pointer;font-weight:700;color:var(--navy)}
 .ed-empty{text-align:center}
+.ed-print{margin-top:14px}.ed-print-grid{display:grid;grid-template-columns:1fr minmax(0,320px);gap:16px;align-items:start}
+@media(max-width:700px){.ed-print-grid{grid-template-columns:1fr}}
+.ed-range{display:grid;gap:4px;margin:12px 0 0}.ed-range input{padding:0;border:0;accent-color:var(--orange)}
+.ed-card-preview{position:relative;border-radius:12px;overflow:hidden;box-shadow:0 4px 18px #0002}.ed-card-preview img{display:block;width:100%}
+.ed-card-preview .ed-qr{position:absolute;height:auto;background:#fff}
 `

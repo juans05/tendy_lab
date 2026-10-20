@@ -88,3 +88,12 @@ test('guardar historia: sin personaje, subir su imagen crea uno con el título',
   const [r] = await q(`select ch.name,ch.image_public_id from adventures a join characters ch on ch.id=a.character_id where a.id=$1`, [id])
   assert.deepEqual([r.name, r.image_public_id], ['Nueva', 'tendy-aventuras/x/img2'])
 })
+
+test('guardar historia: plantilla de tarjeta y posición del QR', opts, async () => {
+  const { saveStory } = await import('./av-story-db')
+  const { q } = await import('./db')
+  const id = await adventure()
+  assert.deepEqual((await q(`select print_template,print_qr from adventures where id=$1`, [id]))[0], { print_template: null, print_qr: { x: 76.6, y: 83.5, size: 19.4 } })
+  await saveStory(id, { ...base, print_template: 'tendy-aventuras/x/tarjeta', print_qr: { x: 10, y: 20, size: 30 }, scenes: [] })
+  assert.deepEqual((await q(`select print_template,print_qr from adventures where id=$1`, [id]))[0], { print_template: 'tendy-aventuras/x/tarjeta', print_qr: { x: 10, y: 20, size: 30 } })
+})
