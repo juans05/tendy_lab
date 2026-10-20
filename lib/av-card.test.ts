@@ -19,3 +19,22 @@ test('tarjeta: el QR se pega sobre la plantilla en el recuadro', async () => {
   assert.deepEqual(await px(10, 10), [70, 21, 119]) // fuera del recuadro sigue la plantilla
   assert.deepEqual(await px(866, 1338), [255, 255, 255]) // borde blanco del QR dentro del recuadro
 })
+
+test('tarjeta: diseño propio de la aventura, si no el de su colección, si no ninguno', async () => {
+  const { templateFor } = await import('./av-card')
+  process.env.CLOUDINARY_CLOUD_NAME = 'demo'
+  assert.deepEqual(templateFor({ print_template: 'tendy/x', collection_slug: 'halloween' }),
+    { url: 'https://res.cloudinary.com/demo/image/upload/q_auto:best/tendy/x', source: 'https://res.cloudinary.com/demo/image/upload/tendy/x' })
+  const h = templateFor({ print_template: null, collection_slug: 'halloween' })!
+  assert.equal(h.url, '/tarjetas/halloween.jpg')
+  assert.ok(h.source.split(/[/\\]/).join('/').endsWith('/public/tarjetas/halloween.jpg'), h.source)
+  assert.equal(templateFor({ print_template: null, collection_slug: 'navidad-sin-diseno' }), null)
+  assert.equal(templateFor({ print_template: null, collection_slug: '../secreto' }), null)
+})
+
+test('tarjeta: el diseño de Halloween incluido sale con el QR en su recuadro', async () => {
+  const { readFileSync } = await import('node:fs')
+  const { templateFor, composeCard, DEFAULT_QR } = await import('./av-card')
+  const out = await composeCard(readFileSync(templateFor({ print_template: null, collection_slug: 'halloween' })!.source), 'https://tendyperu.com/k/TP-7KQ9M2XA', DEFAULT_QR)
+  assert.deepEqual([(await sharp(out).metadata()).width, (await sharp(out).metadata()).height], [1128, 1600])
+})

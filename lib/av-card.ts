@@ -1,3 +1,5 @@
+import { existsSync } from 'node:fs'
+import { join } from 'node:path'
 import QRCode from 'qrcode'
 import sharp from 'sharp'
 
@@ -20,4 +22,17 @@ export async function composeCard(template: Buffer, url: string, q: QrSpot): Pro
   // qrcode redondea al tamaño de módulo: se ajusta al recuadro exacto.
   const fit = await sharp(qr).resize(b.size, b.size, { kernel: 'nearest' }).toBuffer()
   return img.composite([{ input: fit, left: b.left, top: b.top }]).png().toBuffer()
+}
+
+// Qué diseño usa la tarjeta: el subido para la aventura; si no, el de su colección incluido en la app
+// (public/tarjetas/<colección>.jpg, ej. halloween.jpg); si no, ninguno (solo el QR).
+// url = para mostrar en la hoja de impresión; source = de dónde lo lee el servidor para armar el PNG.
+export function templateFor(a: { print_template: string | null; collection_slug: string }): { url: string; source: string } | null {
+  if (a.print_template) {
+    const base = `https://res.cloudinary.com/${process.env.CLOUDINARY_CLOUD_NAME}/image/upload`
+    return { url: `${base}/q_auto:best/${a.print_template}`, source: `${base}/${a.print_template}` }
+  }
+  if (!/^[a-z0-9-]+$/.test(a.collection_slug)) return null
+  const file = join(process.cwd(), 'public', 'tarjetas', `${a.collection_slug}.jpg`)
+  return existsSync(file) ? { url: `/tarjetas/${a.collection_slug}.jpg`, source: file } : null
 }

@@ -44,7 +44,7 @@ function CloudUpload({ kind, value, onChange, slug, cloud, label }: { kind: 'vid
   </div>
 }
 
-export function StoryEditor({ id, slug, published: pub0, cloud, initial }: { id: string; slug: string; published: boolean; cloud: string; initial: Data }) {
+export function StoryEditor({ id, slug, published: pub0, cloud, initial, collectionTemplate }: { id: string; slug: string; published: boolean; cloud: string; initial: Data; collectionTemplate: string | null }) {
   const [d, setD] = useState<Data>(initial)
   const [published, setPublished] = useState(pub0)
   const [result, setResult] = useState<Result | null>(null)
@@ -117,17 +117,17 @@ export function StoryEditor({ id, slug, published: pub0, cloud, initial }: { id:
     </div>
 
     <section className="ed-card ed-print"><h3><span className="ed-n">5</span> Tarjeta para imprimir (QR del kit)</h3>
-      <p className="tag">Sube el diseño de la tarjeta. Al imprimir un lote, el QR de cada kit se pone solo en el recuadro. Ajusta la posición si tu diseño lo tiene en otro lugar.</p>
+      <p className="tag">Al imprimir un lote, el QR de cada kit se pone solo en el recuadro del diseño. {collectionTemplate && !d.print_template ? 'Ahora se usa el diseño de la colección; sube otro solo si esta aventura necesita uno propio.' : 'Sube el diseño de la tarjeta y ajusta la posición si tu diseño tiene el recuadro en otro lugar.'}</p>
       <div className="ed-print-grid">
         <div>
-          <CloudUpload kind="image" label="Subir diseño de la tarjeta" value={d.print_template} onChange={v => set({ print_template: v })} slug={slug} cloud={cloud} />
+          <CloudUpload kind="image" label={collectionTemplate ? 'Subir un diseño propio (opcional)' : 'Subir diseño de la tarjeta'} value={d.print_template} onChange={v => set({ print_template: v })} slug={slug} cloud={cloud} />
           {([['x', 'Horizontal', 0, 95], ['y', 'Vertical', 0, 95], ['size', 'Tamaño del QR', 5, 60]] as const).map(([k, l, min, max]) =>
             <label key={k} className="ed-range">{l} <b>{d.print_qr[k]}%</b>
               <input type="range" min={min} max={max} step={0.1} value={d.print_qr[k]} onChange={e => set({ print_qr: { ...d.print_qr, [k]: Number(e.target.value) } })} /></label>)}
           <button type="button" className="link" onClick={() => set({ print_qr: { x: 76.6, y: 83.5, size: 19.4 } })}>Volver a la posición de la plantilla Halloween</button>
         </div>
-        {d.print_template && <div className="ed-card-preview" aria-label="Vista previa de la tarjeta">
-          <img src={`https://res.cloudinary.com/${cloud}/image/upload/q_auto,f_auto,w_600/${d.print_template}`} alt="" />
+        {(d.print_template || collectionTemplate) && <div className="ed-card-preview" aria-label="Vista previa de la tarjeta">
+          <img src={d.print_template ? `https://res.cloudinary.com/${cloud}/image/upload/q_auto,f_auto,w_600/${d.print_template}` : collectionTemplate!} alt="" />
           <img className="ed-qr" src={`/api/admin/aventuras/qr/a-${slug}?format=svg`} alt="QR de ejemplo" style={{ left: `${d.print_qr.x}%`, top: `${d.print_qr.y}%`, width: `${d.print_qr.size}%` }} />
         </div>}
       </div>
