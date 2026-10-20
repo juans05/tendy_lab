@@ -7,6 +7,7 @@ import { imageUrl, videoUrl } from '@/lib/av-cloudinary'
 import { getSettings } from '@/lib/av-settings'
 import { mediaKey } from '@/lib/av-crypto'
 import { Player } from '@/lib/av-player'
+import { Ghost } from '@/lib/av-ghost'
 import '../aventuras.css'
 
 export const dynamic = 'force-dynamic'
@@ -26,7 +27,16 @@ export default async function Aventura({ params, searchParams }: Props) {
   const { slug } = await params, { k, preview } = await searchParams
   if (!/^[a-z0-9-]+$/.test(slug)) notFound()
   const [a] = await load(slug)
-  if (!a || (!a.published && !(preview && (await currentUser())?.is_admin))) notFound()
+  if (!a) notFound()
+  // Sin publicar: quien escanea su kit ve un aviso amable (sin datos de la historia), no un 404.
+  if (!a.published && !(preview && (await currentUser())?.is_admin)) return <main className="av av-night">
+    <header className="av-top"><span className="av-logo">TendyPeru</span></header>
+    <p className="av-eyebrow">{a.collection}</p>
+    <Ghost src={a.character_image ? imageUrl(a.character_image, 400) : undefined} size={170} />
+    <h1>¡Tu aventura está casi lista!</h1>
+    <p className="av-lead">Estamos preparando esta historia. Vuelve a escanear el QR de tu kit muy pronto.</p>
+    <a className="av-btn" href="https://wa.me/51907579197" target="_blank" rel="noopener">💬 Escríbenos por WhatsApp</a>
+  </main>
   const code = k ? normalizeCode(k) : null
   const [kit] = code ? await q<{ has_pin: boolean }>(`select pin_hash is not null as has_pin from qr_codes where code=$1`, [code]) : []
   const story = await loadStory(a.id)
