@@ -1,8 +1,9 @@
 import './globals.css'
-import { Bricolage_Grotesque, Manrope } from 'next/font/google'
+import localFont from 'next/font/local'
 
-const display = Bricolage_Grotesque({ subsets: ['latin'], variable: '--font-display', weight: ['600', '700', '800'] })
-const body = Manrope({ subsets: ['latin'], variable: '--font-body', weight: ['400', '500', '600', '700', '800'] })
+// Fuentes locales (latin, variables): el build no depende de Google Fonts.
+const display = localFont({ src: './fonts/BricolageGrotesque.woff2', variable: '--font-display', weight: '600 800' })
+const body = localFont({ src: './fonts/Manrope.woff2', variable: '--font-body', weight: '400 800' })
 
 export const metadata = {
   title: 'TendyLab Tools',
