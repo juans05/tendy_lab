@@ -1,6 +1,7 @@
 import { requireAdmin } from '@/lib/auth'
 import { q } from '@/lib/db'
 import { ResetPin } from '@/lib/av-reset-pin'
+import { PROMOS } from '@/lib/av-card'
 
 const ERR: Record<string, string> = { aventura: 'Elige una aventura.', lote: 'Pon un nombre de lote y una cantidad entre 1 y 1000.', nada: 'No se encontró ese código o lote.' }
 
@@ -37,7 +38,10 @@ export default async function Qr({ searchParams }: { searchParams: Promise<{ ok?
     </form>
     <h2>QR general por aventura</h2>
     <p className="tag">Abre el cuento sin código de kit (para redes, tienda o empaque exterior). No permite subir fotos.</p>
-    <ul className="av-glist">{advs.map(a => <li key={a.id}><span>{a.title}</span><span><a className="av-btnlink" href={`/api/admin/aventuras/qr/a-${a.slug}`}>PNG</a><a className="av-btnlink" href={`/api/admin/aventuras/qr/a-${a.slug}?format=svg`}>SVG</a></span></li>)}</ul>
+    <p className="tag">Elige una imagen para descargarla con el QR y el WhatsApp ya puestos, o «Solo el QR».</p>
+    <ul className="av-glist">{advs.map(a => <li key={a.id}><span>{a.title}</span><form method="get" action={`/api/admin/aventuras/qr/a-${a.slug}`} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+      <select name="img" aria-label={`Imagen para ${a.title}`} style={{ margin: 0 }}><option value="">Solo el QR (PNG)</option>{Object.entries(PROMOS).map(([id, p]) => <option key={id} value={id}>{p.label}</option>)}</select>
+      <button style={{ marginTop: 0 }}>Descargar</button><a className="av-btnlink" href={`/api/admin/aventuras/qr/a-${a.slug}?format=svg`}>SVG</a></form></li>)}</ul>
     <form className="form" method="post" action="/api/admin/aventuras/qr">
       <h3>Reasignar a otra aventura</h3>
       <p className="tag">Los QR impresos no cambian: solo cambia la historia que abren.</p>

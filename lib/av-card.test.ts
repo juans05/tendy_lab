@@ -45,3 +45,19 @@ test('lotes: se intercalan para que cada hoja lleve uno de cada lote', async () 
   assert.deepEqual(interleave([['A1', 'A2']]), ['A1', 'A2'])
   assert.deepEqual(interleave([]), [])
 })
+
+test('promos: cada imagen existe y el QR cae dentro de su marco blanco', async () => {
+  const { PROMOS, promoFile, cardBox } = await import('./av-card')
+  const { readFileSync } = await import('node:fs')
+  for (const [id, p] of Object.entries(PROMOS)) {
+    const out = await composeCard(readFileSync(promoFile(id)), 'https://tendyperu.com/a/x', p.qr)
+    const m = await sharp(out).metadata()
+    assert.deepEqual([m.width, m.height], [1080, 1350], id)
+    const b = cardBox(1080, 1350, p.qr)
+    // esquinas del QR: borde blanco del propio QR, dentro del marco
+    for (const [x, y] of [[b.left, b.top], [b.left + b.size - 1, b.top + b.size - 1]]) {
+      const px = [...(await sharp(out).extract({ left: x, top: y, width: 1, height: 1 }).removeAlpha().raw().toBuffer())]
+      assert.deepEqual(px, [255, 255, 255], `${id} ${x},${y}`)
+    }
+  }
+})

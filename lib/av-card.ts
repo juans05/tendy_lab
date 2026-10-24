@@ -24,6 +24,14 @@ export async function composeCard(template: Buffer, url: string, q: QrSpot): Pro
   return img.composite([{ input: fit, left: b.left, top: b.top }]).png().toBuffer()
 }
 
+// Imágenes de promoción (public/promos/<id>.jpg, 1080×1350) con el teléfono ya puesto y un marco blanco
+// donde va el QR. Para añadir otra: copia la imagen y su posición aquí.
+export const PROMOS: Record<string, { label: string; qr: QrSpot }> = {
+  navidad: { label: 'Navidad hecha a mano', qr: { x: 882 / 10.8, y: 1097 / 13.5, size: 150 / 10.8 } },
+  flores: { label: 'Flores, osos y conejos', qr: { x: 222 / 10.8, y: 1072 / 13.5, size: 160 / 10.8 } },
+}
+export const promoFile = (id: string) => join(process.cwd(), 'public', 'promos', `${id}.jpg`)
+
 // Qué diseño usa la tarjeta: el subido para la aventura; si no, el de su colección incluido en la app
 // (public/tarjetas/<colección>.jpg, ej. halloween.jpg); si no, ninguno (solo el QR).
 // url = para mostrar en la hoja de impresión; source = de dónde lo lee el servidor para armar el PNG.

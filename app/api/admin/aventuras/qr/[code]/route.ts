@@ -3,7 +3,7 @@ import { normalizeCode } from '@/lib/av-codes'
 import { adminUser } from '@/lib/av-audit'
 import { adventureUrl, kitUrl, qrPng, qrSvg } from '@/lib/av-admin'
 import { readFile } from 'node:fs/promises'
-import { composeCard, templateFor } from '@/lib/av-card'
+import { composeCard, promoFile, PROMOS, templateFor } from '@/lib/av-card'
 
 // QR de un kit (/k/CODE) o general de una aventura (a-<slug>), en PNG o SVG.
 // format=card: la tarjeta para imprimir (plantilla de la aventura con el QR en su recuadro), en PNG.
@@ -26,6 +26,11 @@ export async function GET(req: Request, { params }: { params: Promise<{ code: st
   }
   const headers = { 'Cache-Control': 'private, no-store' }
   const file = (ext: string) => ({ 'Content-Disposition': `attachment; filename="${name}.${ext}"` })
+  const img = new URL(req.url).searchParams.get('img') ?? ''
+  if (Object.hasOwn(PROMOS, img)) {
+    const png = await composeCard(await readFile(promoFile(img)), url, PROMOS[img].qr)
+    return new Response(new Uint8Array(png), { headers: { ...headers, 'Content-Disposition': `attachment; filename="${img}-${name.slice(3)}.png"`, 'Content-Type': 'image/png' } })
+  }
   if (format === 'card') {
     const t = templateFor(card)
     if (!t) return new Response('Esta aventura no tiene diseño de tarjeta.', { status: 404 })
