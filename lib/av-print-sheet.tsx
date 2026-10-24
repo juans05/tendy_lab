@@ -13,9 +13,15 @@ const LAYOUT = {
 } as const
 type Per = keyof typeof LAYOUT
 
-export function PrintSheet({ cards }: { cards: PrintCard[] }) {
-  const [sel, setSel] = useState<Set<string>>(() => new Set(cards.map(c => c.code)))
+export type PrintPromo = { id: string; label: string; qr: PrintCard['pos'] }
+
+export function PrintSheet({ cards: raw, promos = [] }: { cards: PrintCard[]; promos?: PrintPromo[] }) {
+  const [sel, setSel] = useState<Set<string>>(() => new Set(raw.map(c => c.code)))
   const [por, setPor] = useState<Per>(2)
+  // Diseño: el de cada aventura ('') o una imagen de promoción (con el teléfono) para todas. Sin diseño propio, la primera promo.
+  const [design, setDesign] = useState(() => raw.some(c => c.tpl) ? '' : promos[0]?.id ?? '')
+  const promo = promos.find(p => p.id === design)
+  const cards = promo ? raw.map(c => ({ ...c, tpl: `/promos/${promo.id}.jpg`, pos: promo.qr })) : raw
   const L = LAYOUT[por]
   const F = fitCards(L, L.cols, L.rows)
   const chosen = cards.filter(c => sel.has(c.code))
@@ -50,6 +56,10 @@ export function PrintSheet({ cards }: { cards: PrintCard[] }) {
       <label className="av-row" style={{ margin: 0 }}>Por hoja:
         <select value={por} onChange={e => setPor(Number(e.target.value) as Per)} style={{ width: 'auto', margin: 0 }}>
           {([1, 2, 4] as Per[]).map(n => <option key={n} value={n}>{LAYOUT[n].label}</option>)}</select></label>
+      {promos.length > 0 && <label className="av-row" style={{ margin: 0 }}>Diseño:
+        <select value={design} onChange={e => setDesign(e.target.value)} style={{ width: 'auto', margin: 0 }}>
+          <option value="">El de la aventura</option>
+          {promos.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}</select></label>}
       <button type="button" disabled={!chosen.length} onClick={() => window.print()}>⬇ Descargar PDF / Imprimir</button>
     </div>
     <div className="ps-all no-print">{cards.map((c, i) => <label key={c.code} className={`ps-pick ${sel.has(c.code) ? 'on' : 'off'}`}>

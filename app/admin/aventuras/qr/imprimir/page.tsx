@@ -1,7 +1,7 @@
 import { requireAdmin } from '@/lib/auth'
 import { q } from '@/lib/db'
 import { kitUrl, qrSvg } from '@/lib/av-admin'
-import { interleave, templateFor } from '@/lib/av-card'
+import { interleave, PROMOS, templateFor } from '@/lib/av-card'
 import { PrintSheet } from '@/lib/av-print-sheet'
 
 // Hoja para imprimir un lote: se eligen las tarjetas y salen de 2 en 2 por A4 (o 1 / 4). Sin el código en texto: solo el QR.
@@ -30,6 +30,6 @@ export default async function Imprimir({ searchParams }: { searchParams: Promise
           : <span className="tag">Sin diseño de tarjeta: súbelo en la aventura</span>}
         <a className="av-btnlink" href={`/api/admin/aventuras/qr/${c.code}`}>Solo QR PNG</a><a className="av-btnlink" href={`/api/admin/aventuras/qr/${c.code}?format=svg`}>QR SVG</a></span></li>)}</ul></details>
     </div>
-    <PrintSheet cards={cards} />
+    <PrintSheet cards={cards} promos={Object.entries(PROMOS).map(([id, p]) => ({ id, label: p.label, qr: p.qr }))} />
   </>
 }
