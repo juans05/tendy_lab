@@ -23,9 +23,12 @@ export default async function Imprimir({ searchParams }: { searchParams: Promise
       <h2>{batches.length > 1 ? `Lotes ${batches.map(b => `«${b}»`).join(', ')}` : `Lote «${batches[0] ?? ''}»`} · {codes.length} kits</h2>
       {!batches.length && <p className="err">Elige al menos un lote en Códigos QR.</p>}
       <p className="tag">Marca las tarjetas que quieres y pulsa «Descargar PDF / Imprimir»: salen 2 por hoja A4. En la ventana de impresión elige «Guardar como PDF», escala 100 % y márgenes «Ninguno». Recomendado: dentro del empaque.</p>
+      {batches.length > 0 && <p><a className="av-btnlink" href={`/api/admin/aventuras/qr/lote?${batches.map(b => `batch=${encodeURIComponent(b)}`).join('&')}`}>
+        <b>Descargar todas las imágenes con QR (ZIP)</b></a></p>}
       <details><summary>Descargar uno por uno</summary><ul className="av-glist">{cards.map(c => <li key={c.code}><span>{c.code}</span><span>
-        {c.tpl && <a className="av-btnlink" href={`/api/admin/aventuras/qr/${c.code}?format=card`}>Tarjeta PNG</a>}
-        <a className="av-btnlink" href={`/api/admin/aventuras/qr/${c.code}`}>QR PNG</a><a className="av-btnlink" href={`/api/admin/aventuras/qr/${c.code}?format=svg`}>QR SVG</a></span></li>)}</ul></details>
+        {c.tpl ? <a className="av-btnlink" href={`/api/admin/aventuras/qr/${c.code}?format=card`}><b>Imagen con QR (PNG)</b></a>
+          : <span className="tag">Sin diseño de tarjeta: súbelo en la aventura</span>}
+        <a className="av-btnlink" href={`/api/admin/aventuras/qr/${c.code}`}>Solo QR PNG</a><a className="av-btnlink" href={`/api/admin/aventuras/qr/${c.code}?format=svg`}>QR SVG</a></span></li>)}</ul></details>
     </div>
     <PrintSheet cards={cards} />
   </>

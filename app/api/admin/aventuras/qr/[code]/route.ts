@@ -3,7 +3,7 @@ import { normalizeCode } from '@/lib/av-codes'
 import { adminUser } from '@/lib/av-audit'
 import { adventureUrl, kitUrl, qrPng, qrSvg } from '@/lib/av-admin'
 import { readFile } from 'node:fs/promises'
-import { composeCard, promoFile, PROMOS, templateFor } from '@/lib/av-card'
+import { composeCard, loadTemplate, promoFile, PROMOS, templateFor } from '@/lib/av-card'
 
 // QR de un kit (/k/CODE) o general de una aventura (a-<slug>), en PNG o SVG.
 // format=card: la tarjeta para imprimir (plantilla de la aventura con el QR en su recuadro), en PNG.
@@ -34,9 +34,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ code: st
   if (format === 'card') {
     const t = templateFor(card)
     if (!t) return new Response('Esta aventura no tiene diseño de tarjeta.', { status: 404 })
-    const res = t.source.startsWith('http') ? await fetch(t.source) : null
-    if (res && !res.ok) return new Response('No se pudo leer el diseño de la tarjeta.', { status: 502 })
-    const png = await composeCard(res ? Buffer.from(await res.arrayBuffer()) : await readFile(t.source), url, card.print_qr)
+    const tpl = await loadTemplate(t.source).catch(() => null)
+    if (!tpl) return new Response('No se pudo leer el diseño de la tarjeta.', { status: 502 })
+    const png = await composeCard(tpl, url, card.print_qr)
     return new Response(new Uint8Array(png), { headers: { ...headers, 'Content-Disposition': `attachment; filename="tarjeta-${name.slice(3)}.png"`, 'Content-Type': 'image/png' } })
   }
   return format === 'svg' ? new Response(await qrSvg(url), { headers: { ...headers, ...file('svg'), 'Content-Type': 'image/svg+xml' } })

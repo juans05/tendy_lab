@@ -1,4 +1,5 @@
 import { existsSync } from 'node:fs'
+import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import QRCode from 'qrcode'
 import sharp from 'sharp'
@@ -43,6 +44,14 @@ export function templateFor(a: { print_template: string | null; collection_slug:
   if (!/^[a-z0-9-]+$/.test(a.collection_slug)) return null
   const file = join(process.cwd(), 'public', 'tarjetas', `${a.collection_slug}.jpg`)
   return existsSync(file) ? { url: `/tarjetas/${a.collection_slug}.jpg`, source: file } : null
+}
+
+// Lee el diseño (Cloudinary o archivo local). Lanza si no se puede leer.
+export async function loadTemplate(source: string): Promise<Buffer> {
+  if (!source.startsWith('http')) return readFile(source)
+  const res = await fetch(source)
+  if (!res.ok) throw new Error('No se pudo leer el diseño de la tarjeta.')
+  return Buffer.from(await res.arrayBuffer())
 }
 
 // Varios lotes en una impresión: se intercalan (uno de cada lote por turno) para que cada hoja A4 lleve uno de cada.
